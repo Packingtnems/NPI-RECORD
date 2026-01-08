@@ -555,6 +555,31 @@
             50% { background-color: rgba(255, 152, 0, 0.3); }
         }
         
+        /* Real-time typing indicator */
+        .typing-indicator {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #FF9800;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 11px;
+            z-index: 9999;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s;
+        }
+        
+        .field-updated {
+            animation: fieldUpdate 1s ease;
+        }
+        
+        @keyframes fieldUpdate {
+            0% { background-color: #E8F5E9; }
+            50% { background-color: #C8E6C9; }
+            100% { background-color: #E8F5E9; }
+        }
+        
         .share-link-container {
             background: #e3f2fd;
             border: 1px solid #bbdefb;
@@ -651,7 +676,6 @@
             }
         }
         
-        /* Notification flash */
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -1280,15 +1304,14 @@
 
     <script>
         // ========== CẤU HÌNH FIREBASE - THAY THẾ BẰNG CỦA BẠN ==========
-        // LẤY TỪ FIREBASE CONSOLE -> Project settings -> Your apps -> Web app
         const firebaseConfig = {
-            apiKey: "AIzaSyDtXBh4JBdUeLvzNKWp6VUNatdML871k8E", // THAY BẰNG API KEY CỦA BẠN
-            authDomain: "npi-record.firebaseapp.com", // THAY BẰNG AUTH DOMAIN CỦA BẠN
-            databaseURL: "https://npi-record-default-rtdb.asia-southeast1.firebasedatabase.app", // THAY BẰNG DATABASE URL CỦA BẠN
-            projectId: "npi-record", // THAY BẰNG PROJECT ID CỦA BẠN
-            storageBucket: "npi-record.firebasestorage.app", // THAY BẰNG STORAGE BUCKET CỦA BẠN
-            messagingSenderId: "615504087682", // THAY BẰNG MESSAGING SENDER ID CỦA BẠN
-            appId: "1:615504087682:web:5a1a78fd56ea4f9714429b" // THAY BẰNG APP ID CỦA BẠN
+            apiKey: "AIzaSyDtXBh4JBdUeLvzNKWp6VUNatdML871k8E",
+            authDomain: "npi-record.firebaseapp.com",
+            databaseURL: "https://npi-record-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "npi-record",
+            storageBucket: "npi-record.firebasestorage.app",
+            messagingSenderId: "615504087682",
+            appId: "1:615504087682:web:5a1a78fd56ea4f9714429b"
         };
 
         // ========== BIẾN TOÀN CỤC ==========
@@ -1329,7 +1352,7 @@
             
             setTimeout(() => {
                 toast.remove();
-            }, 4000);
+            }, 3000);
         }
 
         function showLoading(message) {
@@ -1343,19 +1366,16 @@
 
         // ========== KHỞI TẠO NGƯỜI DÙNG ==========
         function initUser() {
-            // Lấy user từ localStorage hoặc tạo mới
             let savedUser = localStorage.getItem("npi_user");
             
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                console.log("👤 Đã load user từ localStorage:", currentUser.name);
+                console.log("👤 Đã load user:", currentUser.name);
             } else {
-                // Tạo tên ngẫu nhiên
-                const names = ["Kỹ sư A", "Kỹ sư B", "QC 1", "QC 2", "Quản lý", "Chuyên viên"];
+                const names = ["Kỹ sư", "QC", "Quản lý", "Chuyên viên"];
                 const randomName = names[Math.floor(Math.random() * names.length)] + " " + Math.floor(Math.random() * 100);
                 
-                // Tạo màu ngẫu nhiên
-                const colors = ["#FF5722", "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#009688", "#E91E63", "#3F51B5"];
+                const colors = ["#FF5722", "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#009688"];
                 const randomColor = colors[Math.floor(Math.random() * colors.length)];
                 
                 currentUser = {
@@ -1371,7 +1391,6 @@
                 console.log("👤 Đã tạo user mới:", currentUser.name);
             }
             
-            // Cập nhật giao diện
             updateUserBadge();
         }
 
@@ -1386,7 +1405,6 @@
                     </button>
                 `;
                 
-                // Thêm sự kiện đổi tên
                 document.getElementById("changeNameBtn")?.addEventListener("click", changeUserName);
             }
         }
@@ -1398,7 +1416,6 @@
                 localStorage.setItem("npi_user", JSON.stringify(currentUser));
                 updateUserBadge();
                 
-                // Cập nhật lên server nếu đang trong project
                 if (currentProjectId && database) {
                     database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
                         name: currentUser.name,
@@ -1417,19 +1434,16 @@
                 return;
             }
             
-            // Nếu đang có project, hỏi muốn rời đi
             if (currentProjectId) {
                 const confirmLeave = confirm(`Bạn đang trong project: ${currentProjectId}\n\nMuốn rời đi để tạo/tham gia project khác?`);
                 if (!confirmLeave) return;
                 
-                // Rời project cũ
                 await leaveCurrentProject();
                 currentProjectId = null;
                 document.getElementById("onlineUsersContainer").style.display = "none";
                 updateStatus("Đã rời project", "offline");
             }
             
-            // Hỏi người dùng muốn làm gì
             const action = confirm(`Chọn hành động:\n\n• OK: Tạo project MỚI\n• Cancel: Tham gia project CÓ SẴN`);
             
             if (action === true) {
@@ -1457,13 +1471,10 @@
             showLoading("Đang tạo project mới...");
             
             try {
-                // Tạo ID project
                 currentProjectId = "npi_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 3).toUpperCase();
                 
-                // Khởi tạo user nếu chưa có
                 if (!currentUser) initUser();
                 
-                // Tạo dữ liệu ban đầu
                 const initialData = collectFormData();
                 initialData._metadata = {
                     created: new Date().toISOString(),
@@ -1471,7 +1482,6 @@
                     version: 1
                 };
                 
-                // Lưu lên Firebase
                 await database.ref(`projects/${currentProjectId}`).set({
                     data: initialData,
                     users: {
@@ -1488,18 +1498,12 @@
                     }
                 });
                 
-                // Cập nhật URL
                 updateUrlWithProjectId();
-                
-                // Hiển thị thông tin
                 document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
                 document.getElementById("projectIdDisplay").title = "Click để copy ID";
                 document.getElementById("onlineUsersContainer").style.display = "block";
                 
-                // Thiết lập realtime listeners
                 setupRealtimeListeners();
-                
-                // Update share link
                 updateShareLink();
                 
                 showToast(`✅ Đã tạo project: ${currentProjectId}`, "success");
@@ -1523,7 +1527,6 @@
             showLoading(`Đang tham gia project ${projectId}...`);
             
             try {
-                // Kiểm tra project có tồn tại không
                 const snapshot = await database.ref(`projects/${projectId}`).once("value");
                 
                 if (!snapshot.exists()) {
@@ -1533,29 +1536,20 @@
                 }
                 
                 currentProjectId = projectId;
-                
-                // Khởi tạo user
                 if (!currentUser) initUser();
                 
-                // Thêm user vào project
                 await database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).set({
                     ...currentUser,
                     online: true,
                     lastActive: Date.now()
                 });
                 
-                // Cập nhật URL
                 updateUrlWithProjectId();
-                
-                // Hiển thị thông tin
                 document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
                 document.getElementById("projectIdDisplay").title = "Click để copy ID";
                 document.getElementById("onlineUsersContainer").style.display = "block";
                 
-                // Thiết lập realtime listeners
                 setupRealtimeListeners();
-                
-                // Load dữ liệu từ server
                 loadProjectData();
                 
                 showToast(`✅ Đã tham gia project ${projectId}`, "success");
@@ -1575,10 +1569,11 @@
             
             console.log("👂 Đang lắng nghe thay đổi từ server...");
             
-            // 1. Lắng nghe thay đổi dữ liệu form
+            // 1. Lắng nghe thay đổi dữ liệu form - QUAN TRỌNG: Sửa chỗ này
             database.ref(`projects/${currentProjectId}/data`).on("value", (snapshot) => {
-                if (snapshot.exists() && !isSaving) {
+                if (snapshot.exists()) {
                     const data = snapshot.val();
+                    // Luôn cập nhật dữ liệu từ server
                     updateFormFromServer(data);
                 }
             });
@@ -1591,10 +1586,8 @@
                 }
             });
             
-            // 3. Keep alive - giữ trạng thái online
             keepAlive();
             
-            // 4. Xử lý khi đóng trang
             window.addEventListener("beforeunload", () => {
                 if (currentProjectId && currentUser) {
                     database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
@@ -1617,7 +1610,7 @@
                     });
                     keepAlive();
                 }
-            }, 15000); // 15 giây cập nhật 1 lần
+            }, 10000);
         }
 
         // ========== XỬ LÝ DỮ LIỆU FORM ==========
@@ -1636,7 +1629,6 @@
                 }
             });
             
-            // Thêm chữ ký
             const engineerSig = localStorage.getItem("engineer_signature");
             const qcSig = localStorage.getItem("qc_signature");
             if (engineerSig) data._engineerSignature = engineerSig;
@@ -1645,8 +1637,10 @@
             return data;
         }
 
+        // ========== HÀM QUAN TRỌNG NHẤT: CẬP NHẬT TỪ SERVER ==========
         function updateFormFromServer(serverData) {
-            // Lọc bỏ metadata
+            if (isSaving) return; // Nếu đang lưu thì không cập nhật
+            
             const formData = {...serverData};
             delete formData._metadata;
             delete formData._lastUpdated;
@@ -1655,9 +1649,7 @@
             let changedCount = 0;
             
             Object.keys(formData).forEach(fieldId => {
-                // Bỏ qua các field bắt đầu bằng _
                 if (fieldId.startsWith("_")) {
-                    // Xử lý chữ ký
                     if (fieldId === "_engineerSignature" && formData[fieldId]) {
                         localStorage.setItem("engineer_signature", formData[fieldId]);
                         const engDisplay = document.getElementById("engineerSignatureDisplay");
@@ -1680,74 +1672,58 @@
                 const field = document.getElementById(fieldId);
                 if (field) {
                     const serverValue = formData[fieldId];
+                    const currentValue = field.type === "checkbox" ? field.checked : field.value;
                     
-                    // Chỉ cập nhật nếu khác và không phải do mình đang nhập
-                    if (field !== document.activeElement && !isFieldBeingEditedByUser(fieldId)) {
-                        const currentValue = field.type === "checkbox" ? field.checked : field.value;
+                    // QUAN TRỌNG: Luôn cập nhật nếu dữ liệu khác
+                    // Chỉ không cập nhật nếu CHÍNH MÌNH đang focus vào field này
+                    if (serverValue !== currentValue) {
+                        const isCurrentlyEditing = (field === document.activeElement);
                         
-                        if (serverValue !== currentValue) {
+                        if (!isCurrentlyEditing) {
                             if (field.type === "checkbox") {
                                 field.checked = Boolean(serverValue);
                             } else {
                                 field.value = serverValue || "";
                             }
                             
-                            // Cập nhật highlight
                             updateHighlight(field);
                             changedCount++;
-                            
-                            // Hiệu ứng visual nhẹ
-                            flashFieldUpdate(field);
+                            showFieldUpdateEffect(field);
                         }
                     }
                 }
             });
             
             if (changedCount > 0) {
-                showNotification(`${changedCount} trường được cập nhật`);
+                showTypingNotification(changedCount);
             }
             
             lastSavedData = {...formData};
-            
-            // Tính lại defect rate
             calculateDefectRate();
         }
 
-        function isFieldBeingEditedByUser(fieldId) {
-            return Object.values(users).some(user => 
-                user.id !== currentUser?.id && user.editingField === fieldId
-            );
-        }
-
-        function flashFieldUpdate(field) {
-            const originalBorder = field.style.borderColor;
-            field.style.borderColor = "#4CAF50";
-            field.style.transition = "border-color 0.5s";
-            
+        function showFieldUpdateEffect(field) {
+            field.classList.add("field-updated");
             setTimeout(() => {
-                field.style.borderColor = originalBorder;
+                field.classList.remove("field-updated");
             }, 1000);
         }
 
-        function showNotification(message) {
-            // Tạo notification nhỏ
-            const notification = document.createElement("div");
-            notification.textContent = `🔄 ${message}`;
-            notification.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: #2196F3;
-                color: white;
-                padding: 8px 12px;
-                border-radius: 4px;
-                font-size: 11px;
-                z-index: 9999;
-                animation: slideInRight 0.3s, fadeOut 0.3s 2s forwards;
-            `;
+        function showTypingNotification(count) {
+            let notification = document.getElementById("typing-notification");
+            if (!notification) {
+                notification = document.createElement("div");
+                notification.id = "typing-notification";
+                notification.className = "typing-indicator";
+                document.body.appendChild(notification);
+            }
             
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 2300);
+            notification.textContent = `🔄 ${count} trường được cập nhật từ người khác`;
+            notification.style.display = "block";
+            
+            setTimeout(() => {
+                notification.style.display = "none";
+            }, 2000);
         }
 
         // ========== CẬP NHẬT GIAO DIỆN NGƯỜI DÙNG ==========
@@ -1757,16 +1733,12 @@
             
             if (!usersListEl || !onlineCountEl) return;
             
-            // Đếm người online (active trong 30 giây gần nhất)
             const now = Date.now();
             const onlineUsers = Object.values(users).filter(user => 
                 user.online || (now - user.lastActive < 30000)
             );
             
-            // Update count
             onlineCountEl.textContent = `${onlineUsers.length} người online`;
-            
-            // Update list
             usersListEl.innerHTML = "";
             
             onlineUsers.forEach(user => {
@@ -1781,26 +1753,22 @@
                     </div>
                     <span>${user.name}</span>
                     ${user.id === currentUser?.id ? '<span style="font-size:9px;">(bạn)</span>' : ""}
+                    ${user.editingField ? `<span style="font-size:9px; margin-left:5px;">✏️</span>` : ""}
                 `;
                 
-                // Tooltip
                 userEl.title = `${user.name}\n${user.editingField ? `Đang nhập: ${user.editingField}` : "Đang online"}`;
-                
                 usersListEl.appendChild(userEl);
             });
             
-            // Highlight fields đang được edit
             updateEditingHighlights();
         }
 
         function updateEditingHighlights() {
-            // Xóa highlight cũ
             document.querySelectorAll(".field-being-edited").forEach(field => {
                 field.classList.remove("field-being-edited");
                 field.removeAttribute("data-editor");
             });
             
-            // Thêm highlight mới
             Object.values(users).forEach(user => {
                 if (user.editingField && user.id !== currentUser?.id) {
                     const field = document.getElementById(user.editingField);
@@ -1817,7 +1785,6 @@
             let debounceTimer;
             
             document.querySelectorAll("input, textarea, select").forEach(field => {
-                // Focus - báo đang edit field này
                 field.addEventListener("focus", function() {
                     if (currentProjectId && currentUser) {
                         currentUser.editingField = this.id;
@@ -1825,25 +1792,27 @@
                     }
                 });
                 
-                // Input - gửi lên server sau khi ngừng gõ
+                // QUAN TRỌNG: Gửi dữ liệu NGAY LẬP TỨC
                 field.addEventListener("input", function() {
                     clearTimeout(debounceTimer);
                     
                     if (currentProjectId && currentUser) {
+                        // Gửi ngay lập tức
+                        saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
+                        
+                        // Debounce cho các lần gõ tiếp theo
                         debounceTimer = setTimeout(() => {
                             saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
-                        }, 800);
+                        }, 200); // Chỉ 200ms
                     }
                     
                     updateHighlight(this);
                     
-                    // Tính defect rate nếu là quantity field
                     if (this.id === "totalQty" || this.id === "ngQty" || this.id === "okQty") {
                         calculateDefectRate();
                     }
                 });
                 
-                // Change (cho select, checkbox)
                 field.addEventListener("change", function() {
                     if (currentProjectId && currentUser) {
                         saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
@@ -1851,13 +1820,21 @@
                     updateHighlight(this);
                 });
                 
-                // Blur - báo ngừng edit
                 field.addEventListener("blur", function() {
                     if (currentProjectId && currentUser) {
                         currentUser.editingField = null;
                         updateUserEditingStatus(null);
                     }
                 });
+                
+                // Thêm keyup để real-time hơn
+                if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') {
+                    field.addEventListener('keyup', function() {
+                        if (currentProjectId && currentUser) {
+                            updateUserEditingStatus(this.id);
+                        }
+                    });
+                }
             });
         }
 
@@ -1868,8 +1845,6 @@
             
             try {
                 await database.ref(`projects/${currentProjectId}/data/${fieldId}`).set(value);
-                
-                // Cập nhật timestamp
                 await database.ref(`projects/${currentProjectId}/data/_lastUpdated`).set(new Date().toISOString());
                 await database.ref(`projects/${currentProjectId}/data/_lastUpdatedBy`).set(currentUser?.id || "unknown");
                 
@@ -1879,7 +1854,7 @@
                 console.error("Lỗi lưu field:", error);
                 showToast("❌ Lỗi đồng bộ dữ liệu", "error");
             } finally {
-                setTimeout(() => { isSaving = false; }, 100);
+                setTimeout(() => { isSaving = false; }, 50); // Chỉ chờ 50ms
             }
         }
 
@@ -1981,12 +1956,9 @@
             
             try {
                 const formData = collectFormData();
-                
-                // Thêm metadata
                 formData._lastUpdated = new Date().toISOString();
                 formData._lastUpdatedBy = currentUser?.id || "unknown";
                 
-                // Lưu toàn bộ lên server
                 await database.ref(`projects/${currentProjectId}/data`).set(formData);
                 
                 showToast("✅ Đã lưu toàn bộ dữ liệu!", "success");
@@ -2011,11 +1983,9 @@
             const shareUrl = updateShareLink();
             document.getElementById("shareLinkContainer").style.display = "block";
             
-            // Copy tự động
             navigator.clipboard.writeText(shareUrl).then(() => {
                 showToast("✅ Đã copy link vào clipboard!", "success");
             }).catch(() => {
-                // Fallback
                 const tempInput = document.createElement("input");
                 tempInput.value = shareUrl;
                 document.body.appendChild(tempInput);
@@ -2051,7 +2021,6 @@
 
         // ========== CHỮ KÝ ĐIỆN TỬ ==========
         function setupSignaturePads() {
-            // Engineer Signature
             const engineerCanvas = document.getElementById("engineerSignature");
             if (engineerCanvas) {
                 engineerSignaturePad = new SignaturePad(engineerCanvas, {
@@ -2066,7 +2035,6 @@
                     document.getElementById("engineerSignatureDisplay").classList.remove("has-signature");
                     showToast("Đã xóa chữ ký kỹ sư", "info");
                     
-                    // Xóa khỏi server
                     if (currentProjectId && database) {
                         database.ref(`projects/${currentProjectId}/data/_engineerSignature`).remove();
                     }
@@ -2081,7 +2049,6 @@
                         displayDiv.innerHTML = `<img src="${dataURL}" alt="Engineer Signature" style="max-width: 100%; max-height: 70px;">`;
                         displayDiv.classList.add("has-signature");
                         
-                        // Lưu lên server
                         if (currentProjectId && database) {
                             database.ref(`projects/${currentProjectId}/data/_engineerSignature`).set(dataURL);
                         }
@@ -2093,7 +2060,6 @@
                     }
                 });
                 
-                // Load saved signature
                 const savedEngineerSig = localStorage.getItem("engineer_signature");
                 if (savedEngineerSig) {
                     document.getElementById("engineerSignatureDisplay").innerHTML = `<img src="${savedEngineerSig}" alt="Engineer Signature" style="max-width: 100%; max-height: 70px;">`;
@@ -2101,7 +2067,6 @@
                 }
             }
             
-            // QC Signature
             const qcCanvas = document.getElementById("qcSignature");
             if (qcCanvas) {
                 qcSignaturePad = new SignaturePad(qcCanvas, {
@@ -2116,7 +2081,6 @@
                     document.getElementById("qcSignatureDisplay").classList.remove("has-signature");
                     showToast("Đã xóa chữ ký QC", "info");
                     
-                    // Xóa khỏi server
                     if (currentProjectId && database) {
                         database.ref(`projects/${currentProjectId}/data/_qcSignature`).remove();
                     }
@@ -2131,7 +2095,6 @@
                         displayDiv.innerHTML = `<img src="${dataURL}" alt="QC Signature" style="max-width: 100%; max-height: 70px;">`;
                         displayDiv.classList.add("has-signature");
                         
-                        // Lưu lên server
                         if (currentProjectId && database) {
                             database.ref(`projects/${currentProjectId}/data/_qcSignature`).set(dataURL);
                         }
@@ -2143,7 +2106,6 @@
                     }
                 });
                 
-                // Load saved signature
                 const savedQcSig = localStorage.getItem("qc_signature");
                 if (savedQcSig) {
                     document.getElementById("qcSignatureDisplay").innerHTML = `<img src="${savedQcSig}" alt="QC Signature" style="max-width: 100%; max-height: 70px;">`;
@@ -2154,13 +2116,11 @@
 
         // ========== CÁC HÀM TIỆN ÍCH ==========
         function setupFormListeners() {
-            // Auto-resize textareas
             document.querySelectorAll("textarea").forEach(textarea => {
                 textarea.addEventListener("input", function() {
                     this.style.height = "auto";
                     this.style.height = this.scrollHeight + "px";
                 });
-                // Kích hoạt lần đầu
                 setTimeout(() => {
                     textarea.dispatchEvent(new Event("input"));
                 }, 100);
@@ -2184,7 +2144,6 @@
         function exportToPDF() {
             showLoading("Đang tạo PDF...");
             
-            // Tạm ẩn các phần không cần thiết
             const noPrintElements = document.querySelectorAll(".no-print");
             const originalDisplay = [];
             noPrintElements.forEach(el => {
@@ -2192,7 +2151,6 @@
                 el.style.display = "none";
             });
             
-            // Thêm watermark cho PDF
             const watermark = document.createElement("div");
             watermark.innerHTML = `
                 <div style="
@@ -2232,8 +2190,8 @@
                     format: "a4"
                 });
                 
-                const imgWidth = 210; // A4 width in mm
-                const pageHeight = 297; // A4 height in mm
+                const imgWidth = 210;
+                const pageHeight = 297;
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
                 
                 let heightLeft = imgHeight;
@@ -2252,7 +2210,6 @@
                 const fileName = `NPI-Record-${document.getElementById("model").value || "Unknown"}-${new Date().toISOString().split("T")[0]}.pdf`;
                 pdf.save(fileName);
                 
-                // Khôi phục trạng thái ban đầu
                 watermark.remove();
                 noPrintElements.forEach((el, index) => {
                     el.style.display = originalDisplay[index];
@@ -2263,7 +2220,6 @@
             }).catch(error => {
                 console.error("PDF Export Error:", error);
                 
-                // Khôi phục trạng thái ban đầu
                 watermark.remove();
                 noPrintElements.forEach((el, index) => {
                     el.style.display = originalDisplay[index];
@@ -2291,7 +2247,6 @@
                     updateHighlight(element);
                 });
                 
-                // Reset signatures
                 if (engineerSignaturePad) engineerSignaturePad.clear();
                 if (qcSignaturePad) qcSignaturePad.clear();
                 localStorage.removeItem("engineer_signature");
@@ -2316,24 +2271,19 @@
         document.addEventListener("DOMContentLoaded", function() {
             console.log("🚀 Khởi động NPI Record Multi-User...");
             
-            // 1. Khởi tạo người dùng
             initUser();
             
-            // 2. Set ngày mặc định
             const today = new Date().toISOString().split("T")[0];
             document.getElementById("date").value = today;
             
-            // 3. Kiểm tra URL có project ID không
             const urlParams = new URLSearchParams(window.location.search);
             const projectIdFromUrl = urlParams.get("project");
             
-            // 4. Thiết lập các listeners
             setupHighlightListeners();
             setupSignaturePads();
             setupFormListeners();
             setupRealTimeInput();
             
-            // 5. Gán sự kiện cho các nút
             document.getElementById("projectAction").addEventListener("click", handleProjectAction);
             document.getElementById("saveToCloud").addEventListener("click", saveAllToCloud);
             document.getElementById("shareForm").addEventListener("click", generateShareLink);
@@ -2343,7 +2293,6 @@
             document.getElementById("copyLinkBtn").addEventListener("click", copyShareLink);
             document.getElementById("closeShareBtn").addEventListener("click", hideShareLink);
             
-            // 6. Copy project ID khi click
             document.getElementById("projectIdDisplay")?.addEventListener("click", function() {
                 if (currentProjectId) {
                     navigator.clipboard.writeText(currentProjectId).then(() => {
@@ -2352,7 +2301,6 @@
                 }
             });
             
-            // 7. Tự động tham gia nếu có project ID trong URL
             if (projectIdFromUrl) {
                 setTimeout(() => {
                     showLoading("Đang kết nối đến project...");
@@ -2360,13 +2308,8 @@
                     document.getElementById("projectIdDisplay").textContent = `ID: ${projectIdFromUrl}`;
                     document.getElementById("onlineUsersContainer").style.display = "block";
                     
-                    // Khởi tạo user
                     if (!currentUser) initUser();
-                    
-                    // Thiết lập listeners
                     setupRealtimeListeners();
-                    
-                    // Load dữ liệu
                     loadProjectData();
                     
                     showToast("📡 Đã tự động kết nối đến project", "info");
@@ -2376,14 +2319,12 @@
                 }, 500);
             }
             
-            // 8. Lắng nghe sự kiện online/offline
             window.addEventListener("online", updateCloudStatus);
             window.addEventListener("offline", updateCloudStatus);
             
             updateCloudStatus();
         });
 
-        // ========== SETUP HIGHLIGHT LISTENERS ==========
         function setupHighlightListeners() {
             document.querySelectorAll("input, textarea, select").forEach(element => {
                 updateHighlight(element);
