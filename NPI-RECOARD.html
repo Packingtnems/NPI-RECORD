@@ -349,6 +349,14 @@
                 height: auto !important;
                 max-height: none !important;
             }
+            
+            input, textarea, select, .signature-pad {
+                display: none !important;
+            }
+            
+            .pdf-value-display {
+                display: block !important;
+            }
         }
         
         .input-small {
@@ -684,6 +692,25 @@
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; }
+        }
+        
+        .pdf-template {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            padding: 15mm;
+            font-family: 'Arial', sans-serif;
+            font-size: 10pt;
+            line-height: 1.2;
+            display: none;
+        }
+        
+        .validation-error {
+            border-color: #f44336 !important;
+            box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2) !important;
         }
     </style>
 </head>
@@ -1302,8 +1329,13 @@
         </div>
     </div>
 
+    <!-- PDF Template (ẩn) -->
+    <div id="pdf-template" class="pdf-template">
+        <!-- PDF content will be generated here -->
+    </div>
+
     <script>
-        // ========== CẤU HÌNH FIREBASE - THAY THẾ BẰNG CỦA BẠN ==========
+        // ========== CẤU HÌNH FIREBASE ==========
         const firebaseConfig = {
             apiKey: "AIzaSyDtXBh4JBdUeLvzNKWp6VUNatdML871k8E",
             authDomain: "npi-record.firebaseapp.com",
@@ -1569,11 +1601,10 @@
             
             console.log("👂 Đang lắng nghe thay đổi từ server...");
             
-            // 1. Lắng nghe thay đổi dữ liệu form - QUAN TRỌNG: Sửa chỗ này
+            // 1. Lắng nghe thay đổi dữ liệu form
             database.ref(`projects/${currentProjectId}/data`).on("value", (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    // Luôn cập nhật dữ liệu từ server
                     updateFormFromServer(data);
                 }
             });
@@ -1637,9 +1668,8 @@
             return data;
         }
 
-        // ========== HÀM QUAN TRỌNG NHẤT: CẬP NHẬT TỪ SERVER ==========
         function updateFormFromServer(serverData) {
-            if (isSaving) return; // Nếu đang lưu thì không cập nhật
+            if (isSaving) return;
             
             const formData = {...serverData};
             delete formData._metadata;
@@ -1674,8 +1704,6 @@
                     const serverValue = formData[fieldId];
                     const currentValue = field.type === "checkbox" ? field.checked : field.value;
                     
-                    // QUAN TRỌNG: Luôn cập nhật nếu dữ liệu khác
-                    // Chỉ không cập nhật nếu CHÍNH MÌNH đang focus vào field này
                     if (serverValue !== currentValue) {
                         const isCurrentlyEditing = (field === document.activeElement);
                         
@@ -1792,18 +1820,15 @@
                     }
                 });
                 
-                // QUAN TRỌNG: Gửi dữ liệu NGAY LẬP TỨC
                 field.addEventListener("input", function() {
                     clearTimeout(debounceTimer);
                     
                     if (currentProjectId && currentUser) {
-                        // Gửi ngay lập tức
                         saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
                         
-                        // Debounce cho các lần gõ tiếp theo
                         debounceTimer = setTimeout(() => {
                             saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
-                        }, 200); // Chỉ 200ms
+                        }, 200);
                     }
                     
                     updateHighlight(this);
@@ -1827,7 +1852,6 @@
                     }
                 });
                 
-                // Thêm keyup để real-time hơn
                 if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') {
                     field.addEventListener('keyup', function() {
                         if (currentProjectId && currentUser) {
@@ -1854,7 +1878,7 @@
                 console.error("Lỗi lưu field:", error);
                 showToast("❌ Lỗi đồng bộ dữ liệu", "error");
             } finally {
-                setTimeout(() => { isSaving = false; }, 50); // Chỉ chờ 50ms
+                setTimeout(() => { isSaving = false; }, 50);
             }
         }
 
@@ -2114,6 +2138,811 @@
             }
         }
 
+        // ========== XUẤT PDF GIỐNG FILE MẪU ==========
+        // ========== XUẤT PDF GIỐNG FILE MẪU ==========
+async function exportToPDF() {
+    // Validate required fields
+    if (!validateForm()) {
+        showToast('Vui lòng điền đầy đủ các trường bắt buộc (Mã hàng và Khách hàng) trước khi xuất PDF!', 'error');
+        return;
+    }
+    
+    // Show loading
+    showLoading('Đang tạo PDF...');
+    const exportBtn = document.getElementById('exportPdf');
+    const originalText = exportBtn.innerHTML;
+    exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo PDF...';
+    exportBtn.disabled = true;
+    
+    try {
+        // Tạo template PDF với đúng cấu trúc như file mẫu
+        const pdfTemplate = document.createElement('div');
+        pdfTemplate.id = 'pdf-export-container';
+        pdfTemplate.style.position = 'absolute';
+        pdfTemplate.style.left = '-9999px';
+        pdfTemplate.style.top = '0';
+        pdfTemplate.style.width = '210mm';
+        pdfTemplate.style.minHeight = '297mm';
+        pdfTemplate.style.backgroundColor = 'white';
+        pdfTemplate.style.padding = '15mm';
+        pdfTemplate.style.fontFamily = 'Arial, sans-serif';
+        pdfTemplate.style.fontSize = '10pt';
+        pdfTemplate.style.lineHeight = '1.2';
+        pdfTemplate.style.boxSizing = 'border-box';
+        
+        // Tạo nội dung PDF giống file mẫu
+        pdfTemplate.innerHTML = generatePDFContentNew();
+        document.body.appendChild(pdfTemplate);
+        
+        // Wait for rendering
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Convert to canvas
+        const canvas = await html2canvas(pdfTemplate, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            allowTaint: true
+        });
+        
+        // Remove template
+        document.body.removeChild(pdfTemplate);
+        
+        // Create PDF
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+        
+        // Calculate dimensions
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Add image to PDF
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        
+        // Handle multi-page
+        let currentHeight = 0;
+        let remainingHeight = imgHeight;
+        
+        while (remainingHeight > 0) {
+            const sectionHeight = Math.min(remainingHeight, pageHeight);
+            
+            pdf.addImage(imgData, 'JPEG', 0, -currentHeight, imgWidth, imgHeight);
+            
+            remainingHeight -= pageHeight;
+            currentHeight += pageHeight;
+            
+            if (remainingHeight > 0) {
+                pdf.addPage();
+            }
+        }
+        
+        // Save PDF
+        const model = document.getElementById('model').value.replace(/\s+/g, '_') || 'Unknown';
+        const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10);
+        pdf.save(`NPI_Record_${model}_${date}.pdf`);
+        
+        showToast('✅ PDF đã được tạo thành công!', 'success');
+        
+    } catch (err) {
+        console.error('PDF generation error:', err);
+        showToast('❌ Có lỗi khi tạo PDF. Vui lòng thử lại!', 'error');
+    } finally {
+        // Restore button state
+        exportBtn.innerHTML = originalText;
+        exportBtn.disabled = false;
+        hideLoading();
+    }
+}
+        // Hàm mới tạo nội dung PDF giống file mẫu
+// ========== HÀM MỚI TẠO NỘI DUNG PDF GIỐNG FILE MẪU (VỚI HIGHLIGHT) ==========
+function generatePDFContentNew() {
+    // Lấy giá trị từ form
+    const model = document.getElementById('model').value || '';
+    const customer = document.getElementById('customer').value || '';
+    const partNo = document.getElementById('partNo').value || '';
+    const dateValue = document.getElementById('date').value || '';
+    const date = dateValue ? formatDateForDisplay(dateValue) : '';
+    
+    // Process checkboxes
+    const processes = [];
+    if (document.getElementById('processSMT').checked) processes.push('SMT');
+    if (document.getElementById('processThroughHole').checked) processes.push('THROUGH HOLE');
+    if (document.getElementById('processCoating').checked) processes.push('COATING');
+    if (document.getElementById('processBoxbuild').checked) processes.push('BOXBUILD');
+    if (document.getElementById('processPacking').checked) processes.push('PACKING');
+    const processText = processes.join(', ');
+    
+    // Hàm kiểm tra và highlight nếu có dữ liệu
+    function highlightIfHasData(value, isCheckbox = false) {
+        if (isCheckbox) {
+            return value ? `<span style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 1px 3px; border-radius: 2px;">${value}</span>` : value;
+        }
+        return value ? `<span style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 1px 3px; border-radius: 2px;">${value}</span>` : '';
+    }
+    
+    // Laser Marking
+    const laserProgram = document.getElementById('laserProgram').value || '';
+    const qrType = document.getElementById('qrType').value || '';
+    const qrSize = document.getElementById('qrSize').value || '';
+    const engravingIntensity = document.getElementById('engravingIntensity').value || '';
+    const qrContentBot = document.getElementById('qrContentBot').value || '';
+    const qrContentTop = document.getElementById('qrContentTop').value || '';
+    const qrScanContent = document.getElementById('qrScanContent').value || '';
+    
+    // Printer & Mounter
+    const printerControl = document.getElementById('printerControl').value || 'Theo Process control sheet đính kèm/According to the attached Process Control Sheet';
+    const mounterControl = document.getElementById('mounterControl').value || 'Theo Process control sheet đính kèm (có xác nhận và đo giá trị của các bên)/According to the attached Process Control Sheet';
+    
+    // Visual Inspection 1
+    const bomQty = document.getElementById('bomQty').value || '';
+    const actualQty = document.getElementById('actualQty').value || '';
+    const visualResult1 = document.getElementById('visualResult1').value || '';
+    const engVerify1 = document.getElementById('engVerify1').value || '';
+    const qcVerify1 = document.getElementById('qcVerify1').value || '';
+    
+    // Reflow Oven
+    const reflowParams = document.getElementById('reflowParams').value || '';
+    const reflowResult = document.getElementById('reflowResult').value || '';
+    const reflowEng = document.getElementById('reflowEng').value || '';
+    const reflowQc = document.getElementById('reflowQc').value || '';
+    
+    // AOI
+    const aoiProgramBot = document.getElementById('aoiProgramBot').value || '';
+    const aoiProgramTop = document.getElementById('aoiProgramTop').value || '';
+    const aoiQty = document.getElementById('aoiQty').value || '';
+    const aoiResult = document.getElementById('aoiResult').value || '';
+    const aoiEng = document.getElementById('aoiEng').value || '';
+    const aoiQc = document.getElementById('aoiQc').value || '';
+    
+    // Flying Probe
+    const probeProgramBot = document.getElementById('probeProgramBot').value || '';
+    const probeProgramTop = document.getElementById('probeProgramTop').value || '';
+    const probeQty = document.getElementById('probeQty').value || '';
+    const probeResult = document.getElementById('probeResult').value || '';
+    const probeEng = document.getElementById('probeEng').value || '';
+    const probeQc = document.getElementById('probeQc').value || '';
+    
+    // Visual Inspection 2
+    const visual2Result1 = document.getElementById('visual2Result1').value || '';
+    const visual2Result2 = document.getElementById('visual2Result2').value || '';
+    const visual2Result3 = document.getElementById('visual2Result3').value || '';
+    const visual2Result4 = document.getElementById('visual2Result4').value || '';
+    const visual2Eng = document.getElementById('visual2Eng').value || '';
+    const visual2Qc = document.getElementById('visual2Qc').value || '';
+    
+    // Through-Hole
+    const solderTemp = document.getElementById('solderTemp').value || '';
+    const solderResult = document.getElementById('solderResult').value || '';
+    const solderEng = document.getElementById('solderEng').value || '';
+    const solderQc = document.getElementById('solderQc').value || '';
+    
+    const thVisual1 = document.getElementById('thVisual1').value || '';
+    const thVisual2 = document.getElementById('thVisual2').value || '';
+    const thVisual3 = document.getElementById('thVisual3').value || '';
+    const thEng = document.getElementById('thEng').value || '';
+    const thQc = document.getElementById('thQc').value || '';
+    
+    // Conclusion
+    const finalResult = document.getElementById('finalResult').value || '';
+    const processRisks = document.getElementById('processRisks').value || '';
+    const lessonsLearned = document.getElementById('lessonsLearned').value || '';
+    const processImprovement = document.getElementById('processImprovement').value || '';
+    
+    const totalQty = document.getElementById('totalQty').value || '0';
+    const okQty = document.getElementById('okQty').value || '0';
+    const ngQty = document.getElementById('ngQty').value || '0';
+    const defectRate = document.getElementById('defectRate').value || '0%';
+    const defectDescription = document.getElementById('defectDescription').value || '';
+    
+    // Signatures
+    const engineerName = document.getElementById('engineerName').value || '';
+    const qcName = document.getElementById('qcName').value || '';
+    const engineerSignature = localStorage.getItem('engineer_signature');
+    const qcSignature = localStorage.getItem('qc_signature');
+    
+    // Hàm tạo text với highlight
+    function createHighlightedText(value, highlightCondition = true) {
+        if (value && highlightCondition) {
+            return `<span class="highlighted-value" style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 1px 4px; border-radius: 2px; display: inline-block; margin: 1px 0;">${value}</span>`;
+        }
+        return value || '';
+    }
+    
+    // Hàm tạo textarea với highlight
+    function createHighlightedTextarea(value) {
+        if (value) {
+            return `<div style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 4px 6px; border-radius: 3px; border-left: 3px solid #1565C0;">${value}</div>`;
+        }
+        return '';
+    }
+    
+    // Hàm tạo select với highlight
+    function createHighlightedSelect(value) {
+        if (value) {
+            return `<span style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 2px 8px; border-radius: 3px; border: 1px solid #1565C0;">${value}</span>`;
+        }
+        return '';
+    }
+    
+    // Tạo nội dung PDF với cấu trúc giống file mẫu và có highlight
+    return `
+        <div style="width: 100%; font-family: 'Arial', sans-serif; font-size: 10pt; line-height: 1.2; box-sizing: border-box;">
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 5px;">
+                <h1 style="font-size: 16pt; margin: 0; font-weight: bold;">BIỂU GHI NPI - NPI RECORD</h1>
+                <div style="font-size: 10pt; margin-top: 3px;">TNEMS-EN-F-048-NPI RECORD-VER03</div>
+            </div>
+            
+            <!-- Product Information -->
+            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
+                <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
+                    THÔNG TIN SẢN PHẨM - PRODUCT INFORMATION
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
+                    <tr>
+                        <td style="width: 25%; font-weight: bold; padding: 3px 0;">MÃ HÀNG / MODEL:</td>
+                        <td style="width: 35%; padding: 3px 0;">
+                            <strong>${createHighlightedText(model, model !== '')}</strong>
+                        </td>
+                        <td style="width: 20%; font-weight: bold; padding: 3px 0;">Part No:</td>
+                        <td style="width: 20%; padding: 3px 0;">
+                            ${createHighlightedText(partNo, partNo !== '')}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; padding: 3px 0;">KHÁCH HÀNG / CUSTOMER:</td>
+                        <td style="padding: 3px 0;">
+                            <strong>${createHighlightedText(customer, customer !== '')}</strong>
+                        </td>
+                        <td style="font-weight: bold; padding: 3px 0;">Ngày / Date:</td>
+                        <td style="padding: 3px 0;">
+                            ${createHighlightedText(date, date !== '')}
+                        </td>
+                    </tr>
+                </table>
+                
+                <div style="margin-top: 8px;">
+                    <span style="font-weight: bold;">Quy trình / Process:</span>
+                    <div style="margin-top: 5px;">
+                        ${processText ? createHighlightedText(processText, processText !== '') : ''}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SMT Process -->
+            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
+                <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
+                    SMT PROCESS
+                </div>
+                
+                <!-- Laser Marking -->
+                <div style="margin-top: 10px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        LASER MARKING
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: left; width: 40%;">NỘI DUNG</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: left; width: 60%;">GIÁ TRỊ</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Tên chương trình/ Program name</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(laserProgram, laserProgram !== '')}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Loại QR code/ QR code type</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(qrType, qrType !== '')}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Kích thước QR code/ QR code size</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(qrSize, qrSize !== '')}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Cường độ khắc/ Engraving intensity</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(engravingIntensity, engravingIntensity !== '')}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Side BOT: Nội dung QR code/ QR code content</td>
+                            <td style="border: 1px solid #000; padding: 4px; min-height: 30px;">
+                                ${qrContentBot ? createHighlightedTextarea(qrContentBot) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Side TOP: Nội dung QR code/ QR code content</td>
+                            <td style="border: 1px solid #000; padding: 4px; min-height: 30px;">
+                                ${qrContentTop ? createHighlightedTextarea(qrContentTop) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Nội dung QR code khi quét bằng máy</td>
+                            <td style="border: 1px solid #000; padding: 4px; min-height: 30px;">
+                                ${qrScanContent ? createHighlightedTextarea(qrScanContent) : ''}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Printer -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        PRINTER
+                    </div>
+                    <div style="padding: 5px;">
+                        ${printerControl ? createHighlightedText(printerControl, printerControl !== 'Theo Process control sheet đính kèm/According to the attached Process Control Sheet') : ''}
+                    </div>
+                </div>
+                
+                <!-- Mounter -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        MOUNTER
+                    </div>
+                    <div style="padding: 5px;">
+                        ${mounterControl ? createHighlightedText(mounterControl, mounterControl !== 'Theo Process control sheet đính kèm (có xác nhận và đo giá trị của các bên)/According to the attached Process Control Sheet') : ''}
+                    </div>
+                </div>
+                
+                <!-- Visual Inspection 1 -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        NGOẠI QUAN VISUAL INSPECTION
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">HƯỚNG LINH KIỆN/COMPONENT POLARITY</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">SỐ LƯỢNG LINH KIỆN/COMPONENT QUANTITY</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ/RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Theo bảng hướng linh kiện đính kèm (QC)</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                <div>Theo BOM/ According to the BOM: 
+                                    ${createHighlightedText(bomQty, bomQty !== '')}
+                                </div>
+                                <div style="margin-top: 5px;">Thực tế/ Reality: 
+                                    ${createHighlightedText(actualQty, actualQty !== '')}
+                                </div>
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${visualResult1 ? createHighlightedSelect(visualResult1) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(engVerify1, engVerify1 !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(qcVerify1, qcVerify1 !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Reflow Oven -->
+            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
+                <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                    LÒ REFLOW/REFLOW OVEN
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                    <tr>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">THÔNG SỐ CÀI ĐẶT MÁY/MACHINE PARAMETERS SETTING</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ/RESULT</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN/VERIFY</th>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 4px;">
+                            - Theo Process control sheet đính kèm<br>
+                            - Profile lò đính kèm
+                        </td>
+                        <td style="border: 1px solid #000; padding: 4px; min-height: 40px;">
+                            ${reflowParams ? createHighlightedTextarea(reflowParams) : ''}
+                        </td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                            ${reflowResult ? createHighlightedSelect(reflowResult) : ''}
+                        </td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                            <div>ENG: ${createHighlightedText(reflowEng, reflowEng !== '')}</div>
+                            <div style="margin-top: 2px;">QC: ${createHighlightedText(reflowQc, reflowQc !== '')}</div>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- AOI -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        AOI/AUTOMATED OPTICAL INSPECTION
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">SỐ LƯỢNG PCBA ĐÃ AOI/PCBA AOI INSPECTED QUANTITY</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ/RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                <div>BOT: ${createHighlightedText(aoiProgramBot, aoiProgramBot !== '')}</div>
+                                <div style="margin-top: 5px;">TOP: ${createHighlightedText(aoiProgramTop, aoiProgramTop !== '')}</div>
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${createHighlightedText(aoiQty, aoiQty !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${aoiResult ? createHighlightedSelect(aoiResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(aoiEng, aoiEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(aoiQc, aoiQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Flying Probe -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        FLYING PROBE (20%)
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">SỐ LƯỢNG ĐÃ ĐO/MEASURED QUANTITY</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ/RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                <div>BOT: ${createHighlightedText(probeProgramBot, probeProgramBot !== '')}</div>
+                                <div style="margin-top: 5px;">TOP: ${createHighlightedText(probeProgramTop, probeProgramTop !== '')}</div>
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${createHighlightedText(probeQty, probeQty !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${probeResult ? createHighlightedSelect(probeResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(probeEng, probeEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(probeQc, probeQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Visual Inspection 2 -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        NGOẠI QUAN VISUAL INSPECTION
+                    </div>
+                    <div style="font-size: 8pt; color: #666; margin: 5px 0; font-style: italic;">
+                        KIỂM TRA SỐ LƯỢNG LINH KIỆN, CHẤT LƯỢNG MỐI HÀN, HƯỚNG LINH KIỆN, CÁC LỖI ĐÁNH GIÁ THEO IPC
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">NỘI DUNG KIỂM TRA</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">KẾT QUẢ</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Số lượng linh kiện/ Component Quantity</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${visual2Result1 ? createHighlightedSelect(visual2Result1) : ''}
+                            </td>
+                            <td rowspan="4" style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">
+                                <div>ENG: ${createHighlightedText(visual2Eng, visual2Eng !== '')}</div>
+                                <div style="margin-top: 10px;">QC: ${createHighlightedText(visual2Qc, visual2Qc !== '')}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Chất lượng mối hàn/ Solder Joint Quality</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${visual2Result2 ? createHighlightedSelect(visual2Result2) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Hướng linh kiện/ Component Orientation</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${visual2Result3 ? createHighlightedSelect(visual2Result3) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Các lỗi đánh giá theo IPC/ Defects Evaluated per IPC</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${visual2Result4 ? createHighlightedSelect(visual2Result4) : ''}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Through-Hole Process -->
+            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
+                <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
+                    THROUGH-HOLE PROCESS
+                </div>
+                
+                <!-- Hand Soldering -->
+                <div style="margin-top: 10px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        QUY TRÌNH HÀN TAY/HAND SOLDERING PROCESS
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">THÔNG SỐ/ PARAMETERS</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">GIÁ TRỊ/ VALUE</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ/RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Nhiệt độ mỏ hàn/ Soldering iron temperature</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(solderTemp, solderTemp !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${solderResult ? createHighlightedSelect(solderResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(solderEng, solderEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(solderQc, solderQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Visual Inspection -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        VISUAL INSPECTION
+                    </div>
+                    <div style="font-size: 8pt; color: #666; margin: 5px 0; font-style: italic;">
+                        KIỂM TRA CHẤT LƯỢNG MỐI HÀN THEO TIÊU CHUẨN IPC
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">TIÊU CHÍ/ CRITERIA</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">KẾT QUẢ/ RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">XÁC NHẬN/ VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Chất lượng mối hàn/ Solder joint quality</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${thVisual1 ? createHighlightedSelect(thVisual1) : ''}
+                            </td>
+                            <td rowspan="3" style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">
+                                <div>ENG: ${createHighlightedText(thEng, thEng !== '')}</div>
+                                <div style="margin-top: 10px;">QC: ${createHighlightedText(thQc, thQc !== '')}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Độ ướt chân/ Wetting</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${thVisual2 ? createHighlightedSelect(thVisual2) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Không có cầu chì/ No solder bridges</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${thVisual3 ? createHighlightedSelect(thVisual3) : ''}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Conclusion -->
+            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
+                <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
+                    KẾT LUẬN/ CONCLUSION
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                    <tr>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 20%;">KẾT QUẢ CUỐI CÙNG/FINAL RESULT</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">RỦI RO TRONG CÁC CÔNG ĐOẠN/RISKS IN EACH PROCESS STEP</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">BÀI HỌC TỪNG CÔNG ĐOẠN/LESSONS LEARNED FROM EACH PROCESS STEP</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">CẢI TIẾN CÔNG ĐOẠN/PROCESS IMPROVEMENT</th>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">
+                            ${finalResult ? createHighlightedSelect(finalResult) : ''}
+                        </td>
+                        <td style="border: 1px solid #000; padding: 4px; min-height: 100px;">
+                            ${processRisks ? createHighlightedTextarea(processRisks) : ''}
+                        </td>
+                        <td style="border: 1px solid #000; padding: 4px; min-height: 100px;">
+                            ${lessonsLearned ? createHighlightedTextarea(lessonsLearned) : ''}
+                        </td>
+                        <td style="border: 1px solid #000; padding: 4px; min-height: 100px;">
+                            ${processImprovement ? createHighlightedTextarea(processImprovement) : ''}
+                        </td>
+                    </tr>
+                </table>
+                
+                <div style="margin-top: 15px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+                        <tr>
+                            <td style="padding: 4px; width: 25%;">
+                                <div><strong>Tổng số lượng (PCBA):</strong></div>
+                                <div><strong>Total qty (PCBA):</strong></div>
+                                <div style="margin-top: 5px; font-size: 11pt;">
+                                    ${totalQty !== '0' ? createHighlightedText(totalQty) : '0'}
+                                </div>
+                            </td>
+                            <td style="padding: 4px; width: 20%;">
+                                <div><strong>OK :</strong></div>
+                                <div style="margin-top: 5px; font-size: 11pt;">
+                                    ${okQty !== '0' ? createHighlightedText(okQty) : '0'}
+                                </div>
+                            </td>
+                            <td style="padding: 4px; width: 20%;">
+                                <div><strong>NG (scrap) :</strong></div>
+                                <div style="margin-top: 5px; font-size: 11pt;">
+                                    ${ngQty !== '0' ? createHighlightedText(ngQty) : '0'}
+                                </div>
+                            </td>
+                            <td style="padding: 4px; width: 35%;">
+                                <div><strong>Tỷ lệ lỗi/ Defect rate (%) :</strong></div>
+                                <div><strong>(NG/Total)</strong></div>
+                                <div style="margin-top: 5px; font-size: 11pt;">
+                                    ${defectRate !== '0%' ? createHighlightedText(defectRate) : '0%'}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <div><strong>Mô tả chi tiết lỗi / detailed defect description:</strong></div>
+                    <div style="margin-top: 5px; min-height: 50px;">
+                        ${defectDescription ? createHighlightedTextarea(defectDescription) : ''}
+                    </div>
+                </div>
+                
+                <!-- Electronic Signatures -->
+                <div style="margin-top: 20px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px 0;">
+                        XÁC NHẬN ĐIỆN TỬ - ELECTRONIC SIGNATURES
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 10px;">
+                        <div style="flex: 1;">
+                            <div><strong>Ký xác nhận của Kỹ sư / Engineer Signature:</strong></div>
+                            <div style="border: 1px solid #000; padding: 10px; margin-top: 5px; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                                ${engineerSignature ? `<img src="${engineerSignature}" alt="Engineer Signature" style="max-width: 100%; max-height: 70px;">` : ''}
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <strong>Tên Kỹ sư / Engineer Name:</strong> 
+                                ${engineerName ? createHighlightedText(engineerName) : ''}
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1;">
+                            <div><strong>Ký xác nhận của QC / QC Signature:</strong></div>
+                            <div style="border: 1px solid #000; padding: 10px; margin-top: 5px; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                                ${qcSignature ? `<img src="${qcSignature}" alt="QC Signature" style="max-width: 100%; max-height: 70px;">` : ''}
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <strong>Tên QC / QC Name:</strong> 
+                                ${qcName ? createHighlightedText(qcName) : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 20px; color: #666; font-size: 9pt; padding-top: 15px; border-top: 1px solid #ddd;">
+                <p>NPI Record - Phiên bản Multi-User Real-time</p>
+                <p>© 2024 - Đồng bộ thời gian thực với Firebase</p>
+            </div>
+        </div>
+    `;
+}
+
+        // ========== ĐỊNH DẠNG NGÀY THÁNG ==========
+        function formatDateForDisplay(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // ========== VALIDATE FORM ==========
+        function validateForm() {
+            const model = document.getElementById('model').value.trim();
+            const customer = document.getElementById('customer').value.trim();
+            
+            let isValid = true;
+            
+            if (!model) {
+                document.getElementById('model').classList.add('validation-error');
+                isValid = false;
+            } else {
+                document.getElementById('model').classList.remove('validation-error');
+            }
+            
+            if (!customer) {
+                document.getElementById('customer').classList.add('validation-error');
+                isValid = false;
+            } else {
+                document.getElementById('customer').classList.remove('validation-error');
+            }
+            
+            return isValid;
+        }
+
+        // ========== IN TRỰC TIẾP ==========
+        function printForm() {
+            if (!validateForm()) {
+                showToast('Vui lòng điền đầy đủ các trường bắt buộc (Mã hàng và Khách hàng) trước khi in!', 'error');
+                return;
+            }
+            
+            // Tạo template cho in ấn
+            const printTemplate = document.createElement('div');
+            printTemplate.innerHTML = generatePDFContentNew();
+            
+            // Mở cửa sổ in
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>NPI Record - ${document.getElementById('model').value || 'Unknown'}</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            font-size: 10pt;
+                            margin: 0;
+                            padding: 15mm;
+                            line-height: 1.2;
+                        }
+                        @media print {
+                            body { padding: 0; }
+                            .page-break { page-break-before: always; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${printTemplate.innerHTML}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+
         // ========== CÁC HÀM TIỆN ÍCH ==========
         function setupFormListeners() {
             document.querySelectorAll("textarea").forEach(textarea => {
@@ -2140,100 +2969,7 @@
             updateStatus(isOnline ? "Đang kết nối" : "Mất kết nối", isOnline ? "online" : "offline");
         }
 
-        // ========== XUẤT PDF ==========
-        function exportToPDF() {
-            showLoading("Đang tạo PDF...");
-            
-            const noPrintElements = document.querySelectorAll(".no-print");
-            const originalDisplay = [];
-            noPrintElements.forEach(el => {
-                originalDisplay.push(el.style.display);
-                el.style.display = "none";
-            });
-            
-            const watermark = document.createElement("div");
-            watermark.innerHTML = `
-                <div style="
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%) rotate(-45deg);
-                    font-size: 60px;
-                    color: rgba(0,0,0,0.1);
-                    z-index: 9999;
-                    pointer-events: none;
-                    font-weight: bold;
-                    white-space: nowrap;
-                ">
-                    NPI RECORD - ${document.getElementById("model").value || "UNKNOWN"}
-                </div>
-            `;
-            document.body.appendChild(watermark);
-            
-            const { jsPDF } = window.jspdf;
-            const element = document.getElementById("main-form");
-            
-            html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                backgroundColor: "#ffffff",
-                width: element.scrollWidth,
-                height: element.scrollHeight,
-                scrollX: 0,
-                scrollY: -window.scrollY
-            }).then(canvas => {
-                const imgData = canvas.toDataURL("image/png", 1.0);
-                const pdf = new jsPDF({
-                    orientation: "portrait",
-                    unit: "mm",
-                    format: "a4"
-                });
-                
-                const imgWidth = 210;
-                const pageHeight = 297;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                
-                let heightLeft = imgHeight;
-                let position = 0;
-                
-                pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-                
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-                
-                const fileName = `NPI-Record-${document.getElementById("model").value || "Unknown"}-${new Date().toISOString().split("T")[0]}.pdf`;
-                pdf.save(fileName);
-                
-                watermark.remove();
-                noPrintElements.forEach((el, index) => {
-                    el.style.display = originalDisplay[index];
-                });
-                
-                hideLoading();
-                showToast("✅ Đã xuất PDF thành công!", "success");
-            }).catch(error => {
-                console.error("PDF Export Error:", error);
-                
-                watermark.remove();
-                noPrintElements.forEach((el, index) => {
-                    el.style.display = originalDisplay[index];
-                });
-                
-                hideLoading();
-                showToast("❌ Lỗi xuất PDF: " + error.message, "error");
-            });
-        }
-
-        function printForm() {
-            window.print();
-        }
-
+        // ========== RESET FORM ==========
         function resetForm() {
             if (confirm("Bạn có chắc muốn xóa TẤT CẢ dữ liệu hiện tại?\n\nDữ liệu đã lưu trên cloud vẫn giữ nguyên.")) {
                 document.querySelectorAll("input, textarea, select").forEach(element => {
