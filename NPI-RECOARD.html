@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NPI Record - Multi-User Version</title>
+    <title>NPI Record - Multi-User Real-time</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
-    <!-- Thêm Axios cho API calls -->
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -111,6 +112,7 @@
             border-radius: 3px;
             font-size: 11px;
             background-color: white;
+            transition: all 0.3s ease;
         }
         
         .form-group textarea {
@@ -370,70 +372,50 @@
             margin-bottom: 15px;
         }
         
-        .form-value {
-            min-height: 20px;
-            padding: 3px 5px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-            border-radius: 2px;
-            margin: 2px 0;
-            display: none;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            max-height: none;
-            height: auto;
-        }
-        
-        .form-value.has-content {
-            color: #1a73e8 !important;
-            font-weight: 500;
-            background-color: #f8fbff;
-            border-left: 3px solid #1a73e8;
-        }
-        
-        .form-value.empty {
-            color: #999;
-            font-style: italic;
-            background-color: #f9f9f9;
-        }
-        
-        .form-value.show {
-            display: block;
-        }
-        
-        .form-input.has-content, .form-textarea.has-content, .form-select.has-content {
-            color: #1a73e8 !important;
-            border-color: #1a73e8 !important;
-            background-color: #f8fbff !important;
+        /* ========== HIGHLIGHT DỮ LIỆU ĐÃ NHẬP ========== */
+        .form-input.has-data,
+        .form-textarea.has-data,
+        .form-select.has-data {
+            color: #1565C0 !important;
+            border-color: #1565C0 !important;
+            background-color: #E3F2FD !important;
+            font-weight: 600 !important;
+            border-width: 2px !important;
         }
         
         .form-checkbox:checked + label {
-            color: #1a73e8 !important;
-            font-weight: 500;
+            color: #1565C0 !important;
+            font-weight: 700 !important;
         }
         
-        textarea.form-textarea {
-            min-height: 80px;
-            resize: vertical;
-            overflow-y: auto;
+        .checkbox-item input:checked {
+            accent-color: #1565C0;
         }
         
-        .long-content {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            min-height: 40px;
-            height: auto;
-            max-height: none;
+        .highlight-text {
+            color: #1565C0 !important;
+            font-weight: 600 !important;
+            background-color: #E3F2FD !important;
+            padding: 2px 4px;
+            border-radius: 2px;
         }
         
-        .conclusion-cell {
-            min-height: 150px;
-            height: auto;
+        .signature-display.has-signature {
+            border: 2px solid #1565C0;
+            background-color: #E8F5E9;
         }
         
-        /* Thêm CSS cho multi-user */
+        /* ========== STYLE ĐẶC BIỆT ========== */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.2);
+        }
+        
+        .highlight-row {
+            background-color: #F5F9FF !important;
+        }
+        
+        /* Cloud Status */
         .cloud-status {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -455,12 +437,122 @@
         
         .online { background-color: #4CAF50; }
         .offline { background-color: #f44336; }
-        .syncing { background-color: #FF9800; animation: pulse 1s infinite; }
+        .syncing { 
+            background-color: #FF9800; 
+            animation: pulse 1s infinite; 
+        }
         
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
             100% { opacity: 1; }
+        }
+        
+        /* Online Users */
+        .online-users {
+            background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .users-list-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .users-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .user-badge .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .user-badge .user-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .user-badge.editing {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 0 2px currentColor;
+        }
+        
+        /* Project Info */
+        .project-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-left: 10px;
+        }
+        
+        #projectIdDisplay {
+            font-family: monospace;
+            cursor: pointer;
+            padding: 2px 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+        
+        #projectIdDisplay:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        
+        /* Field being edited by others */
+        .field-being-edited {
+            animation: fieldPulse 2s infinite;
+            box-shadow: 0 0 0 2px #FF9800 !important;
+            position: relative;
+        }
+        
+        .field-being-edited::after {
+            content: attr(data-editor);
+            position: absolute;
+            top: -20px;
+            right: 0;
+            background: #FF9800;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+        
+        @keyframes fieldPulse {
+            0%, 100% { background-color: rgba(255, 152, 0, 0.1); }
+            50% { background-color: rgba(255, 152, 0, 0.3); }
         }
         
         .share-link-container {
@@ -478,18 +570,11 @@
             padding: 8px;
             border-radius: 3px;
             margin-top: 5px;
-        }
-        
-        .user-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #4a6fa5;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 100px;
+            overflow-y: auto;
         }
         
         .loading-overlay {
@@ -527,6 +612,55 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 500;
+            z-index: 10001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+        
+        .toast-success {
+            background: #4CAF50;
+        }
+        
+        .toast-error {
+            background: #f44336;
+        }
+        
+        .toast-info {
+            background: #2196F3;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Notification flash */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -534,25 +668,39 @@
     <div class="cloud-status no-print">
         <div>
             <span class="status-indicator offline" id="cloudStatus"></span>
-            <span id="cloudStatusText">Chưa kết nối cloud</span>
-            <span id="lastSyncTime" style="margin-left: 15px; font-size: 10px;"></span>
+            <span id="cloudStatusText">Chưa kết nối</span>
         </div>
         <div id="userCount" style="display: flex; align-items: center; gap: 5px;">
             <i class="fas fa-users"></i>
-            <span id="activeUsers">0 người đang online</span>
+            <span>Chưa có project</span>
         </div>
+    </div>
+
+    <!-- Online Users -->
+    <div class="online-users no-print" id="onlineUsersContainer" style="display: none;">
+        <div class="users-list-title">
+            <i class="fas fa-users"></i> 
+            <span id="onlineUsersCount">0 người online</span>
+            <span class="project-info">
+                <i class="fas fa-project-diagram"></i>
+                <span id="projectIdDisplay" title="Click để copy ID">ID: Chưa có project</span>
+            </span>
+        </div>
+        <div class="users-list" id="usersList"></div>
     </div>
 
     <!-- Share Link Container -->
     <div class="share-link-container no-print" id="shareLinkContainer">
         <strong><i class="fas fa-share-alt"></i> LINK CHIA SẺ:</strong>
         <div class="share-link" id="shareLinkText"></div>
-        <button onclick="copyShareLink()" style="margin-top: 10px; padding: 5px 10px;">
-            <i class="fas fa-copy"></i> Copy Link
-        </button>
-        <button onclick="hideShareLink()" style="margin-top: 10px; margin-left: 10px; padding: 5px 10px;">
-            <i class="fas fa-times"></i> Đóng
-        </button>
+        <div style="margin-top: 10px;">
+            <button id="copyLinkBtn" style="padding: 5px 10px; background: #4a6fa5; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                <i class="fas fa-copy"></i> Copy Link
+            </button>
+            <button id="closeShareBtn" style="margin-left: 10px; padding: 5px 10px; background: #666; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                <i class="fas fa-times"></i> Đóng
+            </button>
+        </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -565,6 +713,9 @@
 
     <!-- Buttons for actions -->
     <div class="buttons-container no-print">
+        <button type="button" class="btn btn-primary" id="projectAction">
+            <i class="fas fa-users"></i> Tạo/Tham gia Project
+        </button>
         <button type="button" class="btn btn-success" id="saveToCloud">
             <i class="fas fa-cloud-upload-alt"></i> Lưu lên Cloud
         </button>
@@ -587,8 +738,8 @@
         <div class="form-content">
             <!-- Header -->
             <div class="header">
-                <h1>BIỂU GHI NPI - NPI RECORD (CLOUD VERSION)</h1>
-                <div style="font-size: 12px; margin-top: 5px;">TNEMS-EN-F-048-NPI RECORD-VER03 - Đồng bộ đa người dùng</div>
+                <h1>BIỂU GHI NPI - NPI RECORD</h1>
+                <div style="font-size: 12px; margin-top: 5px;">TNEMS-EN-F-048-NPI RECORD-VER03</div>
             </div>
             
             <!-- Product Information Section -->
@@ -597,23 +748,18 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="model">MÃ HÀNG / MODEL: <span class="required">*</span></label>
+                        <label for="model">MÃ HÀNG / MODEL: <span class="required" style="color: red;">*</span></label>
                         <input type="text" id="model" placeholder="Nhập mã hàng/model" class="form-input required-field">
-                        <div class="form-value" id="model-display"></div>
-                        <div class="error-message" id="model-error">Vui lòng nhập mã hàng</div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="customer">KHÁCH HÀNG / CUSTOMER: <span class="required">*</span></label>
+                        <label for="customer">KHÁCH HÀNG / CUSTOMER: <span class="required" style="color: red;">*</span></label>
                         <input type="text" id="customer" placeholder="Nhập tên khách hàng" class="form-input required-field">
-                        <div class="form-value" id="customer-display"></div>
-                        <div class="error-message" id="customer-error">Vui lòng nhập tên khách hàng</div>
                     </div>
                     
                     <div class="form-group">
                         <label for="partNo">Part No:</label>
                         <input type="text" id="partNo" placeholder="Nhập Part No" class="form-input">
-                        <div class="form-value" id="partNo-display"></div>
                     </div>
                 </div>
                 
@@ -642,13 +788,11 @@
                                 <label for="processPacking">PACKING</label>
                             </div>
                         </div>
-                        <div class="form-value" id="process-display"></div>
                     </div>
                     
                     <div class="form-group" style="flex: 1;">
                         <label for="date">Ngày / Date:</label>
                         <input type="date" id="date" value="" class="form-input">
-                        <div class="form-value" id="date-display"></div>
                     </div>
                 </div>
             </div>
@@ -668,49 +812,42 @@
                         <td>Tên chương trình/ Program name</td>
                         <td>
                             <input type="text" id="laserProgram" placeholder="Nhập tên chương trình" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="laserProgram-display"></div>
                         </td>
                     </tr>
                     <tr>
                         <td>Loại QR code/ QR code type</td>
                         <td>
                             <input type="text" id="qrType" placeholder="Nhập loại QR code" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="qrType-display"></div>
                         </td>
                     </tr>
                     <tr>
                         <td>Kích thước QR code/ QR code size</td>
                         <td>
                             <input type="text" id="qrSize" placeholder="Nhập kích thước QR code" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="qrSize-display"></div>
                         </td>
                     </tr>
                     <tr>
                         <td>Cường độ khắc/ Engraving intensity</td>
                         <td>
                             <input type="text" id="engravingIntensity" placeholder="Nhập cường độ khắc" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="engravingIntensity-display"></div>
                         </td>
                     </tr>
                     <tr>
                         <td>Side BOT: Nội dung QR code/ QR code content</td>
                         <td class="long-content-cell">
                             <textarea id="qrContentBot" placeholder="Nhập nội dung QR code mặt BOT" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="qrContentBot-display"></div>
                         </td>
                     </tr>
                     <tr>
                         <td>Side TOP: Nội dung QR code/ QR code content</td>
                         <td class="long-content-cell">
                             <textarea id="qrContentTop" placeholder="Nhập nội dung QR code mặt TOP" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="qrContentTop-display"></div>
                         </td>
                     </tr>
                     <tr>
                         <td>Nội dung QR code khi quét bằng máy</td>
                         <td class="long-content-cell">
                             <textarea id="qrScanContent" placeholder="Nhập nội dung khi quét QR" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="qrScanContent-display"></div>
                         </td>
                     </tr>
                 </table>
@@ -720,7 +857,6 @@
                 <div class="form-row">
                     <div class="form-group full-width">
                         <input type="text" id="printerControl" placeholder="Ghi chú về printer" value="Theo Process control sheet đính kèm/According to the attached Process Control Sheet" style="width: 100%;" class="form-input">
-                        <div class="form-value" id="printerControl-display"></div>
                     </div>
                 </div>
                 
@@ -729,7 +865,6 @@
                 <div class="form-row">
                     <div class="form-group full-width">
                         <input type="text" id="mounterControl" placeholder="Ghi chú về mounter" value="Theo Process control sheet đính kèm (có xác nhận và đo giá trị của các bên)/According to the attached Process Control Sheet" style="width: 100%;" class="form-input">
-                        <div class="form-value" id="mounterControl-display"></div>
                     </div>
                 </div>
                 
@@ -747,28 +882,24 @@
                         <td>
                             <div>Theo BOM/ According to the BOM: 
                                 <input type="text" id="bomQty" class="input-small form-input" placeholder="Số lượng">
-                                <span class="form-value" id="bomQty-display"></span>
                             </div>
                             <div style="margin-top: 5px;">Thực tế/ Reality: 
                                 <input type="text" id="actualQty" class="input-small form-input" placeholder="Số lượng">
-                                <span class="form-value" id="actualQty-display"></span>
                             </div>
                         </td>
                         <td style="text-align: center;">
                             <select id="visualResult1" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="visualResult1-display"></div>
                         </td>
                         <td style="text-align: center;">
                             <div>ENG: 
                                 <input type="text" id="engVerify1" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="engVerify1-display"></span>
                             </div>
                             <div style="margin-top: 2px;">QC: 
                                 <input type="text" id="qcVerify1" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="qcVerify1-display"></span>
                             </div>
                         </td>
                     </tr>
@@ -792,23 +923,20 @@
                         </td>
                         <td class="long-content-cell">
                             <textarea id="reflowParams" placeholder="Thông số cài đặt" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="reflowParams-display"></div>
                         </td>
                         <td style="text-align: center;">
                             <select id="reflowResult" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="reflowResult-display"></div>
                         </td>
                         <td style="text-align: center;">
                             <div>ENG: 
                                 <input type="text" id="reflowEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="reflowEng-display"></span>
                             </div>
                             <div style="margin-top: 2px;">QC: 
                                 <input type="text" id="reflowQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="reflowQc-display"></span>
                             </div>
                         </td>
                     </tr>
@@ -827,32 +955,27 @@
                         <td>
                             <div>BOT: 
                                 <input type="text" id="aoiProgramBot" class="input-medium form-input" placeholder="Tên chương trình">
-                                <span class="form-value" id="aoiProgramBot-display"></span>
                             </div>
                             <div style="margin-top: 5px;">TOP: 
                                 <input type="text" id="aoiProgramTop" class="input-medium form-input" placeholder="Tên chương trình">
-                                <span class="form-value" id="aoiProgramTop-display"></span>
                             </div>
                         </td>
                         <td>
                             <input type="text" id="aoiQty" class="input-small form-input" placeholder="Số lượng" style="width: 100%;">
-                            <div class="form-value" id="aoiQty-display"></div>
                         </td>
                         <td style="text-align: center;">
                             <select id="aoiResult" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="aoiResult-display"></div>
                         </td>
                         <td style="text-align: center;">
                             <div>ENG: 
                                 <input type="text" id="aoiEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="aoiEng-display"></span>
                             </div>
                             <div style="margin-top: 2px;">QC: 
                                 <input type="text" id="aoiQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="aoiQc-display"></span>
                             </div>
                         </td>
                     </tr>
@@ -871,32 +994,27 @@
                         <td>
                             <div>BOT: 
                                 <input type="text" id="probeProgramBot" class="input-medium form-input" placeholder="Tên chương trình">
-                                <span class="form-value" id="probeProgramBot-display"></span>
                             </div>
                             <div style="margin-top: 5px;">TOP: 
                                 <input type="text" id="probeProgramTop" class="input-medium form-input" placeholder="Tên chương trình">
-                                <span class="form-value" id="probeProgramTop-display"></span>
                             </div>
                         </td>
                         <td>
                             <input type="text" id="probeQty" class="input-small form-input" placeholder="Số lượng" style="width: 100%;">
-                            <div class="form-value" id="probeQty-display"></div>
                         </td>
                         <td style="text-align: center;">
                             <select id="probeResult" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="probeResult-display"></div>
                         </td>
                         <td style="text-align: center;">
                             <div>ENG: 
                                 <input type="text" id="probeEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="probeEng-display"></span>
                             </div>
                             <div style="margin-top: 2px;">QC: 
                                 <input type="text" id="probeQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="probeQc-display"></span>
                             </div>
                         </td>
                     </tr>
@@ -917,19 +1035,17 @@
                         <td>- Số lượng linh kiện/ Component Quantity</td>
                         <td style="text-align: center;">
                             <select id="visual2Result1" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="visual2Result1-display"></div>
                         </td>
                         <td rowspan="4" style="text-align: center; vertical-align: middle;">
                             <div>ENG: 
                                 <input type="text" id="visual2Eng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="visual2Eng-display"></span>
                             </div>
                             <div style="margin-top: 10px;">QC: 
                                 <input type="text" id="visual2Qc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="visual2Qc-display"></span>
                             </div>
                         </td>
                     </tr>
@@ -937,30 +1053,30 @@
                         <td>- Chất lượng mối hàn/ Solder Joint Quality</td>
                         <td style="text-align: center;">
                             <select id="visual2Result2" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="visual2Result2-display"></div>
                         </td>
                     </tr>
                     <tr>
                         <td>- Hướng linh kiện/ Component Orientation</td>
                         <td style="text-align: center;">
                             <select id="visual2Result3" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="visual2Result3-display"></div>
                         </td>
                     </tr>
                     <tr>
                         <td>- Các lỗi đánh giá theo IPC/ Defects Evaluated per IPC</td>
                         <td style="text-align: center;">
                             <select id="visual2Result4" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="visual2Result4-display"></div>
                         </td>
                     </tr>
                 </table>
@@ -968,542 +1084,85 @@
 
             <!-- THROUGH-HOLE Section -->
             <div class="form-section" id="section-through-hole">
-                <div class="section-title">HÀN XUYÊN LỖ/ THROUGH-HOLE</div>
+                <div class="section-title">THROUGH-HOLE PROCESS</div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="thDate">Ngày kiểm tra/ Date:</label>
-                        <input type="date" id="thDate" class="form-input">
-                        <div class="form-value" id="thDate-display"></div>
-                    </div>
-                </div>
-                
-                <!-- COMPONENT QUANTITY CHECK -->
-                <div class="sub-section-title">KIỂM TRA SỐ LƯỢNG LINH KIỆN/COMPONENT QUANTITY CHECK</div>
+                <div class="sub-section-title">QUY TRÌNH HÀN TAY/HAND SOLDERING PROCESS</div>
                 <table>
                     <tr>
-                        <th width="30%">ĐÚNG MÃ/CORRECT PART NUMBER</th>
-                        <th width="20%">SỐ LƯỢNG/QUANTITY</th>
+                        <th width="40%">THÔNG SỐ/ PARAMETERS</th>
+                        <th width="30%">GIÁ TRỊ/ VALUE</th>
                         <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="35%">XÁC NHẬN/VERIFY</th>
+                        <th width="15%">XÁC NHẬN/VERIFY</th>
                     </tr>
                     <tr>
+                        <td>Nhiệt độ mỏ hàn/ Soldering iron temperature</td>
                         <td>
-                            <input type="text" id="thPartNumber" placeholder="Mã linh kiện" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="thPartNumber-display"></div>
-                        </td>
-                        <td>
-                            <input type="text" id="thQty" placeholder="Số lượng" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="thQty-display"></div>
+                            <input type="text" id="solderTemp" placeholder="VD: 350°C" style="width: 100%;" class="form-input">
                         </td>
                         <td style="text-align: center;">
-                            <select id="thResult" style="width: 100%;" class="form-select">
+                            <select id="solderResult" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="thResult-display"></div>
                         </td>
                         <td style="text-align: center;">
+                            <div>ENG: 
+                                <input type="text" id="solderEng" class="input-medium form-input" placeholder="Tên">
+                            </div>
+                            <div style="margin-top: 2px;">QC: 
+                                <input type="text" id="solderQc" class="input-medium form-input" placeholder="Tên">
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                
+                <div class="sub-section-title">VISUAL INSPECTION</div>
+                <div class="note" style="margin-bottom: 10px;">
+                    KIỂM TRA CHẤT LƯỢNG MỐI HÀN THEO TIÊU CHUẨN IPC
+                </div>
+                <table>
+                    <tr>
+                        <th width="40%">TIÊU CHÍ/ CRITERIA</th>
+                        <th width="30%">KẾT QUẢ/ RESULT</th>
+                        <th width="30%">XÁC NHẬN/ VERIFY</th>
+                    </tr>
+                    <tr>
+                        <td>- Chất lượng mối hàn/ Solder joint quality</td>
+                        <td style="text-align: center;">
+                            <select id="thVisual1" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
+                                <option value="OK">OK</option>
+                                <option value="NG">NG</option>
+                            </select>
+                        </td>
+                        <td rowspan="3" style="text-align: center; vertical-align: middle;">
                             <div>ENG: 
                                 <input type="text" id="thEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="thEng-display"></span>
                             </div>
-                            <div style="margin-top: 2px;">QC: 
+                            <div style="margin-top: 10px;">QC: 
                                 <input type="text" id="thQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="thQc-display"></span>
                             </div>
                         </td>
                     </tr>
-                </table>
-                
-                <!-- SOLDERING -->
-                <div class="sub-section-title">HÀN/SOLDERING</div>
-                <table>
                     <tr>
-                        <th width="40%">NHIỆT ĐỘ CÀI ĐẶT HÀN TAY/HAND SOLDERING TEMPERATURE SETTING</th>
-                        <th width="40%">HÀN SELECTIVE/SELECTIVE SOLDERING</th>
-                        <th width="10%">KẾT QUẢ/RESULT</th>
-                        <th width="10%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>
-                            <input type="text" id="handSolderingTemp" placeholder="Nhiệt độ hàn tay" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="handSolderingTemp-display"></div>
-                        </td>
-                        <td class="long-content-cell">
-                            <div>Loại nozzle/Nozzle type: 
-                                <input type="text" id="nozzleType" class="input-medium form-input" placeholder="Loại nozzle">
-                                <span class="form-value" id="nozzleType-display"></span>
-                            </div>
-                            <div style="margin-top: 5px;">Preheat (ºC): 
-                                <input type="text" id="preheatTemp" class="input-small form-input" placeholder="Nhiệt độ">
-                                <span class="form-value" id="preheatTemp-display"></span>
-                                Solder pot (ºC): 
-                                <input type="text" id="solderPotTemp" class="input-small form-input" placeholder="Nhiệt độ">
-                                <span class="form-value" id="solderPotTemp-display"></span>
-                            </div>
-                            <div style="margin-top: 5px;">Thời gian preheat (s): 
-                                <input type="text" id="preheatTime" class="input-small form-input" placeholder="Thời gian">
-                                <span class="form-value" id="preheatTime-display"></span>
-                            </div>
-                        </td>
+                        <td>- Độ ướt chân/ Wetting</td>
                         <td style="text-align: center;">
-                            <select id="solderingResult" style="width: 100%;" class="form-select">
+                            <select id="thVisual2" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="solderingResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="solderingEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="solderingEng-display"></span>
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="solderingQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="solderingQc-display"></span>
-                            </div>
                         </td>
                     </tr>
-                </table>
-                
-                <!-- TESTING -->
-                <div class="sub-section-title">TESTING</div>
-                <table>
                     <tr>
-                        <th width="30%">GIÁ TRỊ KIỂM TRA/INSPECTION VALUE</th>
-                        <th width="40%">CÁC BƯỚC KIỂM TRA/INSPECTION STEPS</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="15%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>Xem file đính kèm Test đính kèm</td>
-                        <td>Xem file đính kèm Test đính kèm</td>
+                        <td>- Không có cầu chì/ No solder bridges</td>
                         <td style="text-align: center;">
-                            <select id="testingResult" style="width: 100%;" class="form-select">
+                            <select id="thVisual3" style="width: 100%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="OK">OK</option>
                                 <option value="NG">NG</option>
                             </select>
-                            <div class="form-value" id="testingResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="testingEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="testingEng-display"></span>
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="testingQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="testingQc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- PCBA CLEANING Section -->
-            <div class="form-section" id="section-cleaning">
-                <div class="sub-section-title">VỆ SINH PCBA/PCBA CLEANING</div>
-                <table>
-                    <tr>
-                        <th width="25%">PHƯƠNG PHÁP VỆ SINH/CLEANING METHOD</th>
-                        <th width="35%">DỤNG CỤ VỆ SINH PCBA/PCBA CLEANING TOOLS</th>
-                        <th width="20%">DUNG DỊCH VỆ SINH PCBA/PCBA CLEANING SOLUTION</th>
-                        <th width="10%">KẾT QUẢ/RESULT</th>
-                        <th width="10%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td class="long-content-cell">
-                            <input type="text" id="cleaningMethod" placeholder="Phương pháp vệ sinh" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="cleaningMethod-display"></div>
-                        </td>
-                        <td class="long-content-cell">
-                            <input type="text" id="cleaningTools" placeholder="Dụng cụ vệ sinh" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="cleaningTools-display"></div>
-                        </td>
-                        <td class="long-content-cell">
-                            <input type="text" id="cleaningSolution" placeholder="Dung dịch vệ sinh" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="cleaningSolution-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="cleaningResult" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="cleaningResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="cleaningEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="cleaningEng-display"></span>
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="cleaningQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="cleaningQc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <!-- VISUAL INSPECTION 3 -->
-                <div class="sub-section-title">NGOẠI QUAN VISUAL INSPECTION</div>
-                <table>
-                    <tr>
-                        <th width="40%">CHẤT LƯỢNG MỐI HÀN VÀ VỆ SINH SẢN PHẨM/SOLDER JOINT QUALITY AND PRODUCT CLEANLINESS</th>
-                        <th width="40%">ĐÚNG, ĐỦ LINH KIỆN/CORRECT AND COMPLETE COMPONENTS</th>
-                        <th width="10%">KẾT QUẢ/RESULT</th>
-                        <th width="10%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td class="long-content-cell">
-                            <textarea id="solderQuality" placeholder="Chất lượng mối hàn và vệ sinh" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="solderQuality-display"></div>
-                        </td>
-                        <td class="long-content-cell">
-                            <textarea id="componentCorrectness" placeholder="Đúng đủ linh kiện" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="componentCorrectness-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="visual3Result" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="visual3Result-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="visual3Eng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="visual3Eng-display"></span>
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="visual3Qc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="visual3Qc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- COATING Section -->
-            <div class="form-section" id="section-coating">
-                <div class="section-title">COATING</div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="coatingDate">Ngày kiểm tra/ Date:</label>
-                        <input type="date" id="coatingDate" class="form-input">
-                        <div class="form-value" id="coatingDate-display"></div>
-                    </div>
-                </div>
-                
-                <table>
-                    <tr>
-                        <th width="50%">NỘI DUNG KIỂM TRA/INSPECTION CONTENT</th>
-                        <th width="20%">KẾT QUẢ/RESULT</th>
-                        <th width="30%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td class="long-content-cell">
-                            <div>- Dung dịch coating/ Coating solution: 
-                                <input type="text" id="coatingSolution" class="input-medium form-input" placeholder="Dung dịch">
-                                <span class="form-value" id="coatingSolution-display"></span>
-                            </div>
-                            <div style="margin-top: 5px;">- Phương pháp coating/ Coating method: 
-                                <input type="text" id="coatingMethod" class="input-medium form-input" placeholder="Phương pháp">
-                                <span class="form-value" id="coatingMethod-display"></span>
-                            </div>
-                            <div style="margin-top: 5px;">- Phương pháp sấy/ Drying method: 
-                                <input type="text" id="dryingMethod" class="input-medium form-input" placeholder="Phương pháp">
-                                <span class="form-value" id="dryingMethod-display"></span>
-                            </div>
-                            <div style="margin-top: 5px;">- Nhiệt độ sấy/ Drying temperature: 
-                                <input type="text" id="dryingTemp" class="input-small form-input" placeholder="Nhiệt độ">
-                                <span class="form-value" id="dryingTemp-display"></span>
-                                ºC
-                            </div>
-                            <div style="margin-top: 5px;">- Thời gian sấy/ Drying time: 
-                                <input type="text" id="dryingTime" class="input-small form-input" placeholder="Thời gian">
-                                <span class="form-value" id="dryingTime-display"></span>
-                                phút
-                            </div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="coatingResult" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="coatingResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="coatingEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="coatingEng-display"></span>
-                            </div>
-                            <div style="margin-top: 10px;">QC: 
-                                <input type="text" id="coatingQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="coatingQc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- BOXBUILD Section -->
-            <div class="form-section" id="section-boxbuild">
-                <div class="section-title">LẮP RÁP / BOXBUILD</div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="boxbuildDate">Ngày kiểm tra/ Date:</label>
-                        <input type="date" id="boxbuildDate" class="form-input">
-                        <div class="form-value" id="boxbuildDate-display"></div>
-                    </div>
-                </div>
-                
-                <!-- ASSEMBLY JIG OR TOOL -->
-                <div class="sub-section-title">LẮP RÁP BOXBUILD</div>
-                <table>
-                    <tr>
-                        <th width="30%">JIG/DỤNG CỤ LẮP RÁP/ASSEMBLY JIG OR TOOL</th>
-                        <th width="40%">TIÊU CHUẨN/SPECIFICATION</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="15%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td class="long-content-cell">
-                            <input type="text" id="assemblyJig" placeholder="Jig/dụng cụ lắp ráp" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="assemblyJig-display"></div>
-                        </td>
-                        <td class="long-content-cell">
-                            <input type="text" id="assemblySpec" placeholder="Tiêu chuẩn" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="assemblySpec-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="assemblyResult" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="assemblyResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="assemblyEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="assemblyEng-display"></span>
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="assemblyQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="assemblyQc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <!-- ASSEMBLY COMPONENT QUANTITY -->
-                <table style="margin-top: 10px;">
-                    <tr>
-                        <th width="30%">SỐ LƯỢNG LINH KIỆN LẮP RÁP/ASSEMBLY COMPONENT QUANTITY</th>
-                        <th width="40%">HƯỚNG/CHIỀU LẮP LINH KIỆN/COMPONENT ORIENTATION</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="15%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td class="long-content-cell">
-                            <input type="text" id="assemblyQty" placeholder="Số lượng linh kiện" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="assemblyQty-display"></div>
-                        </td>
-                        <td>Theo bản vẽ/ According to the drawing</td>
-                        <td style="text-align: center;">
-                            <select id="assemblyOrientationResult" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="assemblyOrientationResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="assemblyOrientationEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="assemblyOrientationEng-display"></span>
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="assemblyOrientationQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="assemblyOrientationQc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <!-- IMEI / LABEL -->
-                <div class="sub-section-title">IMEI / LABEL</div>
-                <table>
-                    <tr>
-                        <th width="25%">VỊ TRÍ DÁN NHÃN/LABEL POSITION</th>
-                        <th width="25%">HƯỚNG DÁN NHÃN/LABEL ORIENTATION</th>
-                        <th width="30%">NỘI DUNG NHÃN/LABEL CONTENT</th>
-                        <th width="10%">KẾT QUẢ/RESULT</th>
-                        <th width="10%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td class="long-content-cell">
-                            <input type="text" id="labelPosition" placeholder="Vị trí dán nhãn" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="labelPosition-display"></div>
-                        </td>
-                        <td class="long-content-cell">
-                            <input type="text" id="labelOrientation" placeholder="Hướng dán nhãn" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="labelOrientation-display"></div>
-                        </td>
-                        <td class="long-content-cell">
-                            <textarea id="labelContent" placeholder="Nội dung nhãn" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="labelContent-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="labelResult" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="labelResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="labelEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="labelEng-display"></span>
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="labelQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="labelQc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- VISUAL INSPECTION 4 Section -->
-            <div class="form-section" id="section-visual4">
-                <div class="sub-section-title">KIỂM TRA NGOẠI QUAN/VISUAL INSPECTION</div>
-                <table>
-                    <tr>
-                        <th width="60%">TIÊU CHUẨN KIỂM TRA/INSPECTION REQUIREMENT</th>
-                        <th width="20%">KẾT QUẢ/RESULT</th>
-                        <th width="20%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td class="long-content-cell">
-                            <textarea id="inspectionRequirement" placeholder="Tiêu chuẩn kiểm tra" rows="5" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="inspectionRequirement-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="boxbuildVisualResult" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="boxbuildVisualResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="boxbuildVisualEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="boxbuildVisualEng-display"></span>
-                            </div>
-                            <div style="margin-top: 10px;">QC: 
-                                <input type="text" id="boxbuildVisualQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="boxbuildVisualQc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- PACKAGING Section -->
-            <div class="form-section" id="section-packaging">
-                <div class="section-title">ĐÓNG GÓI / PACKAGING</div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="packagingDate">Ngày kiểm tra/ Date:</label>
-                        <input type="date" id="packagingDate" class="form-input">
-                        <div class="form-value" id="packagingDate-display"></div>
-                    </div>
-                </div>
-                
-                <!-- PACKAGING MATERIAL -->
-                <div class="sub-section-title">ĐÓNG GÓI/PACKAGING</div>
-                <table>
-                    <tr>
-                        <th width="25%">VẬT LIỆU ĐÓNG GÓI/PACKAGING MATERIAL</th>
-                        <th width="25%">PHƯƠNG PHÁP ĐÓNG GÓI</th>
-                        <th width="20%">SỐ LƯỢNG/THÙNG/QUANTITY PER BOX</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="15%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>
-                            - Theo BOM Đính kèm/ Attached BOM<br>
-                            - Bổ sung (nếu có)/ Additional (if any)
-                        </td>
-                        <td class="long-content-cell">
-                            <input type="text" id="packagingMethod" placeholder="Phương pháp đóng gói" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="packagingMethod-display"></div>
-                        </td>
-                        <td class="long-content-cell">
-                            <input type="text" id="qtyPerBox" placeholder="Số lượng/thùng" style="width: 100%;" class="form-input">
-                            <div class="form-value" id="qtyPerBox-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="packagingResult" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="packagingResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="packagingEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="packagingEng-display"></span>
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="packagingQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="packagingQc-display"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- LABEL Section -->
-            <div class="form-section" id="section-label">
-                <div class="sub-section-title">LABEL</div>
-                <table>
-                    <tr>
-                        <th width="40%">NỘI DUNG LABEL/LABEL CONTENT</th>
-                        <th width="40%">MẪU HOẶC HÌNH ẢNH LABEL THỰC TẾ/ACTUAL IMAGE/ SAMPLE</th>
-                        <th width="10%">KẾT QUẢ/RESULT</th>
-                        <th width="10%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td class="long-content-cell">
-                            <textarea id="packagingLabelContent" placeholder="Nội dung label" rows="5" style="width: 100%;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content" id="packagingLabelContent-display"></div>
-                        </td>
-                        <td>
-                            <div class="note">- Thêm hình ảnh hoặc mẫu thực tế vào ô này<br>- Add actual image in this box</div>
-                            <div style="margin-top: 5px;">
-                                <input type="file" id="labelImage" accept="image/*" style="width: 100%; font-size: 11px;" class="no-print">
-                                <div id="labelImagePreview" style="margin-top: 5px; min-height: 50px; border: 1px dashed #ccc; padding: 5px;"></div>
-                            </div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="packagingLabelResult" style="width: 100%;" class="form-select">
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                            <div class="form-value" id="packagingLabelResult-display"></div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="packagingLabelEng" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="packagingLabelEng-display"></span>
-                            </div>
-                            <div style="margin-top: 10px;">QC: 
-                                <input type="text" id="packagingLabelQc" class="input-medium form-input" placeholder="Tên">
-                                <span class="form-value" id="packagingLabelQc-display"></span>
-                            </div>
                         </td>
                     </tr>
                 </table>
@@ -1523,23 +1182,20 @@
                     <tr>
                         <td style="text-align: center; vertical-align: middle;" class="conclusion-cell">
                             <select id="finalResult" style="width: 90%;" class="form-select">
+                                <option value="">-- Chọn --</option>
                                 <option value="PASS">PASS</option>
                                 <option value="FAIL">FAIL</option>
                                 <option value="CONDITIONAL">CONDITIONAL PASS</option>
                             </select>
-                            <div class="form-value" id="finalResult-display"></div>
                         </td>
                         <td class="conclusion-cell long-content-cell">
                             <textarea id="processRisks" placeholder="Rủi ro trong các công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content conclusion-content" id="processRisks-display"></div>
                         </td>
                         <td class="conclusion-cell long-content-cell">
                             <textarea id="lessonsLearned" placeholder="Bài học từng công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content conclusion-content" id="lessonsLearned-display"></div>
                         </td>
                         <td class="conclusion-cell long-content-cell">
                             <textarea id="processImprovement" placeholder="Cải tiến công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
-                            <div class="form-value long-content conclusion-content" id="processImprovement-display"></div>
                         </td>
                     </tr>
                 </table>
@@ -1547,26 +1203,22 @@
                 <div class="form-row" style="margin-top: 15px;">
                     <div class="form-group">
                         <label for="totalQty">Tổng số lượng (PCBA): <br>Total qty (PCBA):</label>
-                        <input type="number" id="totalQty" placeholder="Nhập tổng số lượng" class="form-input">
-                        <div class="form-value" id="totalQty-display"></div>
+                        <input type="number" id="totalQty" placeholder="Nhập tổng số lượng" class="form-input" min="0">
                     </div>
                     
                     <div class="form-group">
                         <label for="okQty">OK :</label>
-                        <input type="number" id="okQty" placeholder="Nhập số lượng OK" class="form-input">
-                        <div class="form-value" id="okQty-display"></div>
+                        <input type="number" id="okQty" placeholder="Nhập số lượng OK" class="form-input" min="0">
                     </div>
                     
                     <div class="form-group">
                         <label for="ngQty">NG (scrap) :</label>
-                        <input type="number" id="ngQty" placeholder="Nhập số lượng NG" class="form-input">
-                        <div class="form-value" id="ngQty-display"></div>
+                        <input type="number" id="ngQty" placeholder="Nhập số lượng NG" class="form-input" min="0">
                     </div>
                     
                     <div class="form-group">
                         <label for="defectRate">Tỷ lệ lỗi/ Defect rate (%) : <br> (NG/Total)</label>
                         <input type="text" id="defectRate" placeholder="Tự động tính toán" readonly style="background-color: #f0f0f0;" class="form-input">
-                        <div class="form-value" id="defectRate-display"></div>
                     </div>
                 </div>
                 
@@ -1574,7 +1226,6 @@
                     <div class="form-group full-width">
                         <label for="defectDescription">Mô tả chi tiết lỗi / detailed defect description:</label>
                         <textarea id="defectDescription" placeholder="Mô tả chi tiết các lỗi" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
-                        <div class="form-value long-content" id="defectDescription-display"></div>
                     </div>
                 </div>
                 
@@ -1596,7 +1247,6 @@
                         <div style="margin-top: 5px;">
                             <label for="engineerName" class="inline-label">Tên Kỹ sư / Engineer Name:</label>
                             <input type="text" id="engineerName" placeholder="Nhập tên kỹ sư" style="width: 200px;" class="form-input">
-                            <span class="form-value" id="engineerName-display"></span>
                         </div>
                     </div>
                     
@@ -1615,540 +1265,1157 @@
                         <div style="margin-top: 5px;">
                             <label for="qcName" class="inline-label">Tên QC / QC Name:</label>
                             <input type="text" id="qcName" placeholder="Nhập tên QC" style="width: 200px;" class="form-input">
-                            <span class="form-value" id="qcName-display"></span>
                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="footer">
-                <p>NPI Record Cloud Version - Dữ liệu đồng bộ đa người dùng</p>
-                <p>© 2024 - Phiên bản Cloud 1.0</p>
+                <p>NPI Record - Phiên bản Multi-User Real-time</p>
+                <p>© 2024 - Đồng bộ thời gian thực với Firebase</p>
                 <p style="font-size: 10px; color: #888;" id="dataInfo"></p>
             </div>
         </div>
     </div>
 
     <script>
-// ============================================
-// CẤU HÌNH DỄ DÀNG - CHỈ CẦN THAY 2 DÒNG NÀY
-// ============================================
-
-// CÁCH 1: Dùng GitHub Gist (Miễn phí, tốt nhất)
-// const CLOUD_TYPE = 'gist'; // 'gist', 'firebase', 'supabase', 'jsonbin'
-// const GITHUB_TOKEN = 'ghp_your_token_here'; // Thay bằng token của bạn
-
-// CÁCH 2: Dùng JSONBin.io (DỄ NHẤT - không cần token)
-// const CLOUD_TYPE = 'jsonbin';
-// const JSONBIN_API_KEY = '$2a$10$your_bin_id_here'; // Tạo free tại jsonbin.io
-
-// CÁCH 3: SIÊU DỄ - Không cần token gì cả!
-const CLOUD_TYPE = 'jsonbin';
-const JSONBIN_API_KEY = '$2a$10$p76pFOkHQKK9gmLg1Uy03ey.Y6uB6taEgIJj6EvbSij0z8EocoNV2';
-
-// ============================================
-// KHÔNG CẦN SỬA GÌ DƯỚI ĐÂY
-// ============================================
-
-let currentProjectId = null;
-let isOnline = false;
-let autoSaveInterval = null;
-let syncInterval = null;
-let lastSavedTime = null;
-let currentUser = null;
-
-// Tạo user ID ngẫu nhiên cho mỗi người dùng
-function generateUserId() {
-    return 'user_' + Math.random().toString(36).substr(2, 9);
-}
-
-// Khởi tạo
-document.addEventListener('DOMContentLoaded', function() {
-    // Tạo user ID
-    currentUser = localStorage.getItem('npi_user_id') || generateUserId();
-    localStorage.setItem('npi_user_id', currentUser);
-    
-    // Set ngày mặc định
-    const today = new Date().toISOString().split('T')[0];
-    ['date', 'thDate', 'coatingDate', 'boxbuildDate', 'packagingDate'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = today;
-    });
-    
-    // Kiểm tra URL có project ID không
-    const urlParams = new URLSearchParams(window.location.search);
-    const projectId = urlParams.get('project');
-    
-    if (projectId) {
-        currentProjectId = projectId;
-        loadFromCloud(projectId);
-        updateStatus('Đang tải dữ liệu từ cloud...', 'syncing');
-    } else {
-        // Tạo project ID mới từ ngày và mã hàng (nếu có)
-        updateDataInfo('Chưa có dự án. Lưu lên cloud để tạo link chia sẻ.');
-    }
-    
-    // Thiết lập listeners
-    setupFormListeners();
-    setupEventListeners();
-    
-    // Auto-save mỗi 30 giây
-    autoSaveInterval = setInterval(autoSave, 30000);
-    
-    // Auto-sync mỗi 60 giây
-    syncInterval = setInterval(checkForUpdates, 60000);
-    
-    // Cập nhật trạng thái
-    updateCloudStatus();
-});
-
-// ========== CÁC HÀM CLOUD ==========
-
-async function saveToCloud() {
-    showLoading('Đang lưu lên cloud...');
-    
-    try {
-        const formData = collectFormData();
-        
-        // Thêm metadata
-        formData._metadata = {
-            lastUpdated: new Date().toISOString(),
-            updatedBy: currentUser,
-            version: (formData._metadata?.version || 0) + 1
+        // ========== CẤU HÌNH FIREBASE - THAY THẾ BẰNG CỦA BẠN ==========
+        // LẤY TỪ FIREBASE CONSOLE -> Project settings -> Your apps -> Web app
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtXBh4JBdUeLvzNKWp6VUNatdML871k8E", // THAY BẰNG API KEY CỦA BẠN
+            authDomain: "npi-record.firebaseapp.com", // THAY BẰNG AUTH DOMAIN CỦA BẠN
+            databaseURL: "https://npi-record-default-rtdb.asia-southeast1.firebasedatabase.app", // THAY BẰNG DATABASE URL CỦA BẠN
+            projectId: "npi-record", // THAY BẰNG PROJECT ID CỦA BẠN
+            storageBucket: "npi-record.firebasestorage.app", // THAY BẰNG STORAGE BUCKET CỦA BẠN
+            messagingSenderId: "615504087682", // THAY BẰNG MESSAGING SENDER ID CỦA BẠN
+            appId: "1:615504087682:web:5a1a78fd56ea4f9714429b" // THAY BẰNG APP ID CỦA BẠN
         };
-        
-        let result;
-        
-        switch(CLOUD_TYPE) {
-            case 'gist':
-                result = await saveToGist(formData);
-                break;
-            case 'jsonbin':
-                result = await saveToJsonBin(formData);
-                break;
-            case 'firebase':
-                result = await saveToFirebase(formData);
-                break;
-            default:
-                // Fallback: localStorage + shareable URL
-                result = await saveToLocalStorageWithShare(formData);
-        }
-        
-        if (result && result.success) {
-            lastSavedTime = new Date();
-            updateStatus('Đã lưu lên cloud', 'online');
-            updateLastSyncTime();
-            
-            if (result.projectId && !currentProjectId) {
-                currentProjectId = result.projectId;
-                updateShareLink(result.projectId);
-            }
-            
-            showSuccess('Lưu thành công!');
-            return true;
-        } else {
-            throw new Error('Lưu thất bại');
-        }
-        
-    } catch (error) {
-        console.error('Lỗi lưu cloud:', error);
-        updateStatus('Lỗi kết nối cloud', 'offline');
-        showError('Không thể lưu lên cloud. Đang lưu cục bộ...');
-        
-        // Fallback: lưu localStorage
-        localStorage.setItem('npi_backup_' + Date.now(), JSON.stringify(collectFormData()));
-        return false;
-    } finally {
-        hideLoading();
-    }
-}
 
-async function loadFromCloud(projectId) {
-    showLoading('Đang tải dữ liệu...');
-    
-    try {
-        let data;
-        
-        switch(CLOUD_TYPE) {
-            case 'gist':
-                data = await loadFromGist(projectId);
-                break;
-            case 'jsonbin':
-                data = await loadFromJsonBin(projectId);
-                break;
-            case 'firebase':
-                data = await loadFromFirebase(projectId);
-                break;
-            default:
-                data = await loadFromLocalStorage(projectId);
-        }
-        
-        if (data) {
-            populateForm(data);
-            updateStatus('Đã tải dữ liệu', 'online');
-            updateDataInfo(`Dữ liệu cập nhật: ${new Date(data._metadata?.lastUpdated || Date.now()).toLocaleString()}`);
-            showSuccess('Tải dữ liệu thành công!');
-            return true;
-        }
-        
-    } catch (error) {
-        console.error('Lỗi tải cloud:', error);
-        updateStatus('Không tải được dữ liệu', 'offline');
-        showError('Không thể tải dữ liệu từ cloud');
-    } finally {
-        hideLoading();
-    }
-    
-    return false;
-}
+        // ========== BIẾN TOÀN CỤC ==========
+        let app;
+        let database;
+        let currentProjectId = null;
+        let currentUser = null;
+        let users = {};
+        let isSaving = false;
+        let lastSavedData = {};
+        let userTimeout = null;
+        let engineerSignaturePad = null;
+        let qcSignaturePad = null;
 
-// ========== GITHUB GIST IMPLEMENTATION ==========
-
-async function saveToGist(formData) {
-    if (!GITHUB_TOKEN) {
-        throw new Error('Chưa cấu hình GitHub Token');
-    }
-    
-    const gistData = {
-        files: {
-            'npi_record.json': {
-                content: JSON.stringify(formData, null, 2)
-            }
-        },
-        description: `NPI Record - ${formData.model || 'Unknown Model'}`,
-        public: false
-    };
-    
-    let url = 'https://api.github.com/gists';
-    let method = 'POST';
-    
-    if (currentProjectId) {
-        url = `https://api.github.com/gists/${currentProjectId}`;
-        method = 'PATCH';
-    }
-    
-    const response = await axios({
-        method: method,
-        url: url,
-        headers: {
-            'Authorization': `token ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json'
-        },
-        data: gistData
-    });
-    
-    const gistId = response.data.id;
-    const projectId = gistId;
-    
-    // Lưu project ID để dùng sau
-    if (!currentProjectId) {
-        currentProjectId = projectId;
-        localStorage.setItem('last_project_id', projectId);
-    }
-    
-    return { success: true, projectId: projectId };
-}
-
-async function loadFromGist(gistId) {
-    const response = await axios.get(`https://api.github.com/gists/${gistId}`);
-    
-    if (response.data && response.data.files && response.data.files['npi_record.json']) {
-        const content = response.data.files['npi_record.json'].content;
-        return JSON.parse(content);
-    }
-    
-    return null;
-}
-
-// ========== JSONBIN.IO IMPLEMENTATION (DỄ NHẤT) ==========
-
-async function saveToJsonBin(formData) {
-    // Tạo free account tại jsonbin.io để lấy API key
-    const binId = currentProjectId || 'new';
-    const url = binId === 'new' 
-        ? 'https://api.jsonbin.io/v3/b'
-        : `https://api.jsonbin.io/v3/b/${binId}`;
-    
-    const response = await axios({
-        method: binId === 'new' ? 'POST' : 'PUT',
-        url: url,
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': JSONBIN_API_KEY,
-            'X-Bin-Name': `NPI Record - ${formData.model || 'Unknown'}`
-        },
-        data: formData
-    });
-    
-    const newBinId = response.data.metadata?.id || currentProjectId;
-    
-    if (!currentProjectId && newBinId) {
-        currentProjectId = newBinId;
-        localStorage.setItem('last_project_id', newBinId);
-    }
-    
-    return { success: true, projectId: newBinId };
-}
-
-async function loadFromJsonBin(binId) {
-    const response = await axios.get(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-        headers: {
-            'X-Master-Key': JSONBIN_API_KEY
-        }
-    });
-    
-    return response.data.record;
-}
-
-// ========== LOCALSTORAGE WITH SHAREABLE URL ==========
-
-async function saveToLocalStorageWithShare(formData) {
-    // Tạo project ID nếu chưa có
-    if (!currentProjectId) {
-        currentProjectId = 'npi_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-    }
-    
-    // Lưu vào localStorage với project ID
-    localStorage.setItem('npi_project_' + currentProjectId, JSON.stringify(formData));
-    
-    // Lưu danh sách projects
-    const projects = JSON.parse(localStorage.getItem('npi_projects') || '[]');
-    if (!projects.includes(currentProjectId)) {
-        projects.push(currentProjectId);
-        localStorage.setItem('npi_projects', JSON.stringify(projects));
-    }
-    
-    // Tạo shareable URL
-    const shareUrl = `${window.location.origin}${window.location.pathname}?project=${currentProjectId}`;
-    
-    return { 
-        success: true, 
-        projectId: currentProjectId,
-        shareUrl: shareUrl 
-    };
-}
-
-async function loadFromLocalStorage(projectId) {
-    const data = localStorage.getItem('npi_project_' + projectId);
-    return data ? JSON.parse(data) : null;
-}
-
-// ========== CÁC HÀM TIỆN ÍCH ==========
-
-function collectFormData() {
-    const data = {};
-    
-    // Thu thập tất cả input, select, textarea có id
-    document.querySelectorAll('[id]').forEach(element => {
-        if (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA') {
-            if (element.type === 'checkbox') {
-                data[element.id] = element.checked;
-            } else if (element.type === 'radio') {
-                if (element.checked) data[element.name] = element.value;
+        // ========== KHỞI TẠO FIREBASE ==========
+        try {
+            if (!firebase.apps.length) {
+                app = firebase.initializeApp(firebaseConfig);
             } else {
-                data[element.id] = element.value;
+                app = firebase.app();
             }
+            database = firebase.database();
+            console.log("✅ Firebase đã khởi tạo");
+        } catch (error) {
+            console.error("❌ Lỗi khởi tạo Firebase:", error);
+            showToast("Không thể kết nối đến server", "error");
         }
-    });
-    
-    return data;
-}
 
-function populateForm(data) {
-    Object.keys(data).forEach(key => {
-        if (key.startsWith('_')) return; // Bỏ qua metadata
-        
-        const element = document.getElementById(key);
-        if (element) {
-            if (element.type === 'checkbox') {
-                element.checked = Boolean(data[key]);
-            } else if (element.type === 'radio') {
-                const radio = document.querySelector(`input[name="${key}"][value="${data[key]}"]`);
-                if (radio) radio.checked = true;
+        // ========== HÀM HIỂN THỊ THÔNG BÁO ==========
+        function showToast(message, type = "success") {
+            const toast = document.createElement("div");
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-triangle" : "info-circle"}"></i>
+                ${message}
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+
+        function showLoading(message) {
+            document.getElementById("loadingMessage").textContent = message;
+            document.getElementById("loadingOverlay").style.display = "flex";
+        }
+
+        function hideLoading() {
+            document.getElementById("loadingOverlay").style.display = "none";
+        }
+
+        // ========== KHỞI TẠO NGƯỜI DÙNG ==========
+        function initUser() {
+            // Lấy user từ localStorage hoặc tạo mới
+            let savedUser = localStorage.getItem("npi_user");
+            
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                console.log("👤 Đã load user từ localStorage:", currentUser.name);
             } else {
-                element.value = data[key] || '';
+                // Tạo tên ngẫu nhiên
+                const names = ["Kỹ sư A", "Kỹ sư B", "QC 1", "QC 2", "Quản lý", "Chuyên viên"];
+                const randomName = names[Math.floor(Math.random() * names.length)] + " " + Math.floor(Math.random() * 100);
+                
+                // Tạo màu ngẫu nhiên
+                const colors = ["#FF5722", "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#009688", "#E91E63", "#3F51B5"];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                currentUser = {
+                    id: "user_" + Math.random().toString(36).substr(2, 9),
+                    name: randomName,
+                    color: randomColor,
+                    online: true,
+                    lastActive: Date.now(),
+                    editingField: null
+                };
+                
+                localStorage.setItem("npi_user", JSON.stringify(currentUser));
+                console.log("👤 Đã tạo user mới:", currentUser.name);
             }
             
-            // Kích hoạt event để cập nhật display
-            element.dispatchEvent(new Event('input'));
+            // Cập nhật giao diện
+            updateUserBadge();
         }
-    });
-}
 
-function setupFormListeners() {
-    // Auto-resize textareas
-    document.querySelectorAll('textarea').forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-        textarea.dispatchEvent(new Event('input'));
-    });
-    
-    // Mark form changed
-    document.querySelectorAll('input, textarea, select').forEach(element => {
-        element.addEventListener('input', function() {
-            updateStatus('Có thay đổi chưa lưu', 'syncing');
-        });
-    });
-}
-
-function setupEventListeners() {
-    document.getElementById('saveToCloud').addEventListener('click', saveToCloud);
-    document.getElementById('shareForm').addEventListener('click', showShareLink);
-    document.getElementById('exportPdf').addEventListener('click', exportToPDF);
-    document.getElementById('printForm').addEventListener('click', printForm);
-    document.getElementById('resetForm').addEventListener('click', resetForm);
-}
-
-function updateStatus(message, status = 'offline') {
-    const statusEl = document.getElementById('cloudStatus');
-    const textEl = document.getElementById('cloudStatusText');
-    
-    if (statusEl) {
-        statusEl.className = 'status-indicator ' + status;
-    }
-    
-    if (textEl) {
-        textEl.textContent = message;
-    }
-}
-
-function updateLastSyncTime() {
-    const timeEl = document.getElementById('lastSyncTime');
-    if (timeEl && lastSavedTime) {
-        timeEl.textContent = `Cập nhật: ${lastSavedTime.toLocaleTimeString()}`;
-    }
-}
-
-function updateDataInfo(info) {
-    const infoEl = document.getElementById('dataInfo');
-    if (infoEl) {
-        infoEl.textContent = info;
-    }
-}
-
-function updateCloudStatus() {
-    // Kiểm tra kết nối internet
-    isOnline = navigator.onLine;
-    
-    if (isOnline) {
-        updateStatus('Đang kết nối...', 'online');
-    } else {
-        updateStatus('Không có kết nối internet', 'offline');
-    }
-}
-
-function updateShareLink(projectId) {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?project=${projectId}`;
-    document.getElementById('shareLinkText').textContent = shareUrl;
-}
-
-function showShareLink() {
-    if (!currentProjectId) {
-        alert('Vui lòng lưu dữ liệu lên cloud trước để tạo link chia sẻ!');
-        return;
-    }
-    
-    updateShareLink(currentProjectId);
-    document.getElementById('shareLinkContainer').style.display = 'block';
-}
-
-function hideShareLink() {
-    document.getElementById('shareLinkContainer').style.display = 'none';
-}
-
-function copyShareLink() {
-    const shareUrl = document.getElementById('shareLinkText').textContent;
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        alert('Đã copy link chia sẻ vào clipboard!');
-    });
-}
-
-async function autoSave() {
-    if (currentProjectId && isOnline) {
-        await saveToCloud();
-    }
-}
-
-async function checkForUpdates() {
-    if (currentProjectId && isOnline) {
-        await loadFromCloud(currentProjectId);
-    }
-}
-
-function showLoading(message) {
-    document.getElementById('loadingMessage').textContent = message;
-    document.getElementById('loadingOverlay').style.display = 'flex';
-}
-
-function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
-}
-
-function showSuccess(message) {
-    alert('✅ ' + message);
-}
-
-function showError(message) {
-    alert('❌ ' + message);
-}
-
-function resetForm() {
-    if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu hiện tại?')) {
-        document.querySelectorAll('input, textarea, select').forEach(element => {
-            if (element.type === 'checkbox') {
-                element.checked = false;
-            } else if (element.type === 'radio') {
-                element.checked = false;
-            } else if (element.type === 'date') {
-                element.value = new Date().toISOString().split('T')[0];
-            } else {
-                element.value = '';
+        function updateUserBadge() {
+            const userCountEl = document.getElementById("userCount");
+            if (userCountEl && currentUser) {
+                userCountEl.innerHTML = `
+                    <i class="fas fa-user" style="color: ${currentUser.color}"></i>
+                    <span>${currentUser.name}</span>
+                    <button id="changeNameBtn" style="background: transparent; border: none; color: white; cursor: pointer; margin-left: 5px; font-size: 10px;" title="Đổi tên">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                `;
+                
+                // Thêm sự kiện đổi tên
+                document.getElementById("changeNameBtn")?.addEventListener("click", changeUserName);
             }
-            element.dispatchEvent(new Event('input'));
+        }
+
+        function changeUserName() {
+            const newName = prompt("Nhập tên hiển thị mới:", currentUser.name);
+            if (newName && newName.trim() && newName !== currentUser.name) {
+                currentUser.name = newName.trim();
+                localStorage.setItem("npi_user", JSON.stringify(currentUser));
+                updateUserBadge();
+                
+                // Cập nhật lên server nếu đang trong project
+                if (currentProjectId && database) {
+                    database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
+                        name: currentUser.name,
+                        lastActive: Date.now()
+                    });
+                }
+                
+                showToast(`✅ Đã đổi tên thành: ${currentUser.name}`, "success");
+            }
+        }
+
+        // ========== TẠO/THAM GIA PROJECT ==========
+        async function handleProjectAction() {
+            if (!database) {
+                showToast("Chưa kết nối được Firebase", "error");
+                return;
+            }
+            
+            // Nếu đang có project, hỏi muốn rời đi
+            if (currentProjectId) {
+                const confirmLeave = confirm(`Bạn đang trong project: ${currentProjectId}\n\nMuốn rời đi để tạo/tham gia project khác?`);
+                if (!confirmLeave) return;
+                
+                // Rời project cũ
+                await leaveCurrentProject();
+                currentProjectId = null;
+                document.getElementById("onlineUsersContainer").style.display = "none";
+                updateStatus("Đã rời project", "offline");
+            }
+            
+            // Hỏi người dùng muốn làm gì
+            const action = confirm(`Chọn hành động:\n\n• OK: Tạo project MỚI\n• Cancel: Tham gia project CÓ SẴN`);
+            
+            if (action === true) {
+                await createNewProject();
+            } else {
+                await joinExistingProject();
+            }
+        }
+
+        async function leaveCurrentProject() {
+            if (currentProjectId && currentUser && database) {
+                try {
+                    await database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
+                        online: false,
+                        lastActive: Date.now(),
+                        editingField: null
+                    });
+                } catch (error) {
+                    console.error("Lỗi rời project:", error);
+                }
+            }
+        }
+
+        async function createNewProject() {
+            showLoading("Đang tạo project mới...");
+            
+            try {
+                // Tạo ID project
+                currentProjectId = "npi_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 3).toUpperCase();
+                
+                // Khởi tạo user nếu chưa có
+                if (!currentUser) initUser();
+                
+                // Tạo dữ liệu ban đầu
+                const initialData = collectFormData();
+                initialData._metadata = {
+                    created: new Date().toISOString(),
+                    createdBy: currentUser.id,
+                    version: 1
+                };
+                
+                // Lưu lên Firebase
+                await database.ref(`projects/${currentProjectId}`).set({
+                    data: initialData,
+                    users: {
+                        [currentUser.id]: {
+                            ...currentUser,
+                            online: true,
+                            lastActive: Date.now()
+                        }
+                    },
+                    metadata: {
+                        created: new Date().toISOString(),
+                        createdBy: currentUser.name,
+                        projectName: `NPI-${new Date().toLocaleDateString("vi-VN")}`
+                    }
+                });
+                
+                // Cập nhật URL
+                updateUrlWithProjectId();
+                
+                // Hiển thị thông tin
+                document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
+                document.getElementById("projectIdDisplay").title = "Click để copy ID";
+                document.getElementById("onlineUsersContainer").style.display = "block";
+                
+                // Thiết lập realtime listeners
+                setupRealtimeListeners();
+                
+                // Update share link
+                updateShareLink();
+                
+                showToast(`✅ Đã tạo project: ${currentProjectId}`, "success");
+                updateStatus("Đang đồng bộ thời gian thực", "online");
+                
+            } catch (error) {
+                console.error("Lỗi tạo project:", error);
+                showToast("❌ Lỗi tạo project: " + error.message, "error");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function joinExistingProject() {
+            const projectId = prompt("Nhập ID project muốn tham gia:");
+            if (!projectId || !projectId.trim()) {
+                showToast("❌ Chưa nhập ID project", "error");
+                return;
+            }
+            
+            showLoading(`Đang tham gia project ${projectId}...`);
+            
+            try {
+                // Kiểm tra project có tồn tại không
+                const snapshot = await database.ref(`projects/${projectId}`).once("value");
+                
+                if (!snapshot.exists()) {
+                    showToast("❌ Project không tồn tại!", "error");
+                    hideLoading();
+                    return;
+                }
+                
+                currentProjectId = projectId;
+                
+                // Khởi tạo user
+                if (!currentUser) initUser();
+                
+                // Thêm user vào project
+                await database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).set({
+                    ...currentUser,
+                    online: true,
+                    lastActive: Date.now()
+                });
+                
+                // Cập nhật URL
+                updateUrlWithProjectId();
+                
+                // Hiển thị thông tin
+                document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
+                document.getElementById("projectIdDisplay").title = "Click để copy ID";
+                document.getElementById("onlineUsersContainer").style.display = "block";
+                
+                // Thiết lập realtime listeners
+                setupRealtimeListeners();
+                
+                // Load dữ liệu từ server
+                loadProjectData();
+                
+                showToast(`✅ Đã tham gia project ${projectId}`, "success");
+                updateStatus("Đang đồng bộ thời gian thực", "online");
+                
+            } catch (error) {
+                console.error("Lỗi tham gia project:", error);
+                showToast("❌ Lỗi tham gia project: " + error.message, "error");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ========== REALTIME LISTENERS ==========
+        function setupRealtimeListeners() {
+            if (!currentProjectId || !database) return;
+            
+            console.log("👂 Đang lắng nghe thay đổi từ server...");
+            
+            // 1. Lắng nghe thay đổi dữ liệu form
+            database.ref(`projects/${currentProjectId}/data`).on("value", (snapshot) => {
+                if (snapshot.exists() && !isSaving) {
+                    const data = snapshot.val();
+                    updateFormFromServer(data);
+                }
+            });
+            
+            // 2. Lắng nghe thay đổi danh sách user
+            database.ref(`projects/${currentProjectId}/users`).on("value", (snapshot) => {
+                if (snapshot.exists()) {
+                    users = snapshot.val();
+                    updateUsersDisplay();
+                }
+            });
+            
+            // 3. Keep alive - giữ trạng thái online
+            keepAlive();
+            
+            // 4. Xử lý khi đóng trang
+            window.addEventListener("beforeunload", () => {
+                if (currentProjectId && currentUser) {
+                    database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
+                        online: false,
+                        lastActive: Date.now(),
+                        editingField: null
+                    });
+                }
+            });
+        }
+
+        function keepAlive() {
+            if (userTimeout) clearTimeout(userTimeout);
+            
+            userTimeout = setTimeout(() => {
+                if (currentProjectId && currentUser && database) {
+                    database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
+                        lastActive: Date.now(),
+                        online: true
+                    });
+                    keepAlive();
+                }
+            }, 15000); // 15 giây cập nhật 1 lần
+        }
+
+        // ========== XỬ LÝ DỮ LIỆU FORM ==========
+        function collectFormData() {
+            const data = {};
+            
+            document.querySelectorAll("input, textarea, select").forEach(element => {
+                if (element.id && element.id !== "") {
+                    if (element.type === "checkbox") {
+                        data[element.id] = element.checked;
+                    } else if (element.type === "radio") {
+                        if (element.checked) data[element.name] = element.value;
+                    } else {
+                        data[element.id] = element.value;
+                    }
+                }
+            });
+            
+            // Thêm chữ ký
+            const engineerSig = localStorage.getItem("engineer_signature");
+            const qcSig = localStorage.getItem("qc_signature");
+            if (engineerSig) data._engineerSignature = engineerSig;
+            if (qcSig) data._qcSignature = qcSig;
+            
+            return data;
+        }
+
+        function updateFormFromServer(serverData) {
+            // Lọc bỏ metadata
+            const formData = {...serverData};
+            delete formData._metadata;
+            delete formData._lastUpdated;
+            delete formData._lastUpdatedBy;
+            
+            let changedCount = 0;
+            
+            Object.keys(formData).forEach(fieldId => {
+                // Bỏ qua các field bắt đầu bằng _
+                if (fieldId.startsWith("_")) {
+                    // Xử lý chữ ký
+                    if (fieldId === "_engineerSignature" && formData[fieldId]) {
+                        localStorage.setItem("engineer_signature", formData[fieldId]);
+                        const engDisplay = document.getElementById("engineerSignatureDisplay");
+                        if (engDisplay) {
+                            engDisplay.innerHTML = `<img src="${formData[fieldId]}" alt="Engineer Signature" style="max-width: 100%; max-height: 70px;">`;
+                            engDisplay.classList.add("has-signature");
+                        }
+                    }
+                    if (fieldId === "_qcSignature" && formData[fieldId]) {
+                        localStorage.setItem("qc_signature", formData[fieldId]);
+                        const qcDisplay = document.getElementById("qcSignatureDisplay");
+                        if (qcDisplay) {
+                            qcDisplay.innerHTML = `<img src="${formData[fieldId]}" alt="QC Signature" style="max-width: 100%; max-height: 70px;">`;
+                            qcDisplay.classList.add("has-signature");
+                        }
+                    }
+                    return;
+                }
+                
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    const serverValue = formData[fieldId];
+                    
+                    // Chỉ cập nhật nếu khác và không phải do mình đang nhập
+                    if (field !== document.activeElement && !isFieldBeingEditedByUser(fieldId)) {
+                        const currentValue = field.type === "checkbox" ? field.checked : field.value;
+                        
+                        if (serverValue !== currentValue) {
+                            if (field.type === "checkbox") {
+                                field.checked = Boolean(serverValue);
+                            } else {
+                                field.value = serverValue || "";
+                            }
+                            
+                            // Cập nhật highlight
+                            updateHighlight(field);
+                            changedCount++;
+                            
+                            // Hiệu ứng visual nhẹ
+                            flashFieldUpdate(field);
+                        }
+                    }
+                }
+            });
+            
+            if (changedCount > 0) {
+                showNotification(`${changedCount} trường được cập nhật`);
+            }
+            
+            lastSavedData = {...formData};
+            
+            // Tính lại defect rate
+            calculateDefectRate();
+        }
+
+        function isFieldBeingEditedByUser(fieldId) {
+            return Object.values(users).some(user => 
+                user.id !== currentUser?.id && user.editingField === fieldId
+            );
+        }
+
+        function flashFieldUpdate(field) {
+            const originalBorder = field.style.borderColor;
+            field.style.borderColor = "#4CAF50";
+            field.style.transition = "border-color 0.5s";
+            
+            setTimeout(() => {
+                field.style.borderColor = originalBorder;
+            }, 1000);
+        }
+
+        function showNotification(message) {
+            // Tạo notification nhỏ
+            const notification = document.createElement("div");
+            notification.textContent = `🔄 ${message}`;
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #2196F3;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 11px;
+                z-index: 9999;
+                animation: slideInRight 0.3s, fadeOut 0.3s 2s forwards;
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2300);
+        }
+
+        // ========== CẬP NHẬT GIAO DIỆN NGƯỜI DÙNG ==========
+        function updateUsersDisplay() {
+            const usersListEl = document.getElementById("usersList");
+            const onlineCountEl = document.getElementById("onlineUsersCount");
+            
+            if (!usersListEl || !onlineCountEl) return;
+            
+            // Đếm người online (active trong 30 giây gần nhất)
+            const now = Date.now();
+            const onlineUsers = Object.values(users).filter(user => 
+                user.online || (now - user.lastActive < 30000)
+            );
+            
+            // Update count
+            onlineCountEl.textContent = `${onlineUsers.length} người online`;
+            
+            // Update list
+            usersListEl.innerHTML = "";
+            
+            onlineUsers.forEach(user => {
+                const userEl = document.createElement("div");
+                userEl.className = `user-badge ${user.editingField ? "editing" : ""}`;
+                userEl.style.borderLeft = `3px solid ${user.color}`;
+                
+                userEl.innerHTML = `
+                    <div class="status-dot" style="background: ${user.color}"></div>
+                    <div class="user-avatar" style="background: ${user.color}">
+                        ${user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span>${user.name}</span>
+                    ${user.id === currentUser?.id ? '<span style="font-size:9px;">(bạn)</span>' : ""}
+                `;
+                
+                // Tooltip
+                userEl.title = `${user.name}\n${user.editingField ? `Đang nhập: ${user.editingField}` : "Đang online"}`;
+                
+                usersListEl.appendChild(userEl);
+            });
+            
+            // Highlight fields đang được edit
+            updateEditingHighlights();
+        }
+
+        function updateEditingHighlights() {
+            // Xóa highlight cũ
+            document.querySelectorAll(".field-being-edited").forEach(field => {
+                field.classList.remove("field-being-edited");
+                field.removeAttribute("data-editor");
+            });
+            
+            // Thêm highlight mới
+            Object.values(users).forEach(user => {
+                if (user.editingField && user.id !== currentUser?.id) {
+                    const field = document.getElementById(user.editingField);
+                    if (field) {
+                        field.classList.add("field-being-edited");
+                        field.setAttribute("data-editor", user.name);
+                    }
+                }
+            });
+        }
+
+        // ========== XỬ LÝ INPUT THỜI GIAN THỰC ==========
+        function setupRealTimeInput() {
+            let debounceTimer;
+            
+            document.querySelectorAll("input, textarea, select").forEach(field => {
+                // Focus - báo đang edit field này
+                field.addEventListener("focus", function() {
+                    if (currentProjectId && currentUser) {
+                        currentUser.editingField = this.id;
+                        updateUserEditingStatus(this.id);
+                    }
+                });
+                
+                // Input - gửi lên server sau khi ngừng gõ
+                field.addEventListener("input", function() {
+                    clearTimeout(debounceTimer);
+                    
+                    if (currentProjectId && currentUser) {
+                        debounceTimer = setTimeout(() => {
+                            saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
+                        }, 800);
+                    }
+                    
+                    updateHighlight(this);
+                    
+                    // Tính defect rate nếu là quantity field
+                    if (this.id === "totalQty" || this.id === "ngQty" || this.id === "okQty") {
+                        calculateDefectRate();
+                    }
+                });
+                
+                // Change (cho select, checkbox)
+                field.addEventListener("change", function() {
+                    if (currentProjectId && currentUser) {
+                        saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
+                    }
+                    updateHighlight(this);
+                });
+                
+                // Blur - báo ngừng edit
+                field.addEventListener("blur", function() {
+                    if (currentProjectId && currentUser) {
+                        currentUser.editingField = null;
+                        updateUserEditingStatus(null);
+                    }
+                });
+            });
+        }
+
+        async function saveFieldToServer(fieldId, value) {
+            if (!currentProjectId || !database || isSaving) return;
+            
+            isSaving = true;
+            
+            try {
+                await database.ref(`projects/${currentProjectId}/data/${fieldId}`).set(value);
+                
+                // Cập nhật timestamp
+                await database.ref(`projects/${currentProjectId}/data/_lastUpdated`).set(new Date().toISOString());
+                await database.ref(`projects/${currentProjectId}/data/_lastUpdatedBy`).set(currentUser?.id || "unknown");
+                
+                lastSavedData[fieldId] = value;
+                
+            } catch (error) {
+                console.error("Lỗi lưu field:", error);
+                showToast("❌ Lỗi đồng bộ dữ liệu", "error");
+            } finally {
+                setTimeout(() => { isSaving = false; }, 100);
+            }
+        }
+
+        async function updateUserEditingStatus(fieldId) {
+            if (!currentProjectId || !currentUser || !database) return;
+            
+            try {
+                await database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
+                    editingField: fieldId,
+                    lastActive: Date.now()
+                });
+            } catch (error) {
+                console.error("Lỗi cập nhật trạng thái editing:", error);
+            }
+        }
+
+        // ========== HIGHLIGHT DỮ LIỆU ==========
+        function updateHighlight(element) {
+            if (!element) return;
+            
+            const hasData = element.type === "checkbox" 
+                ? element.checked
+                : element.type === "select-one"
+                ? element.value && element.value !== ""
+                : element.value && element.value.trim() !== "";
+            
+            if (hasData) {
+                element.classList.add("has-data");
+                const row = element.closest("tr");
+                if (row) row.classList.add("highlight-row");
+            } else {
+                element.classList.remove("has-data");
+                const row = element.closest("tr");
+                if (row) row.classList.remove("highlight-row");
+            }
+        }
+
+        function calculateDefectRate() {
+            const total = parseInt(document.getElementById("totalQty").value) || 0;
+            const ng = parseInt(document.getElementById("ngQty").value) || 0;
+            
+            let rate = 0;
+            if (total > 0) {
+                rate = (ng / total) * 100;
+            }
+            
+            document.getElementById("defectRate").value = rate.toFixed(2) + "%";
+            updateHighlight(document.getElementById("defectRate"));
+        }
+
+        // ========== URL & SHARING ==========
+        function updateUrlWithProjectId() {
+            if (!currentProjectId) return;
+            
+            const url = new URL(window.location);
+            url.searchParams.set("project", currentProjectId);
+            window.history.pushState({}, "", url);
+        }
+
+        function updateShareLink() {
+            if (!currentProjectId) return "";
+            
+            const shareUrl = `${window.location.origin}${window.location.pathname}?project=${currentProjectId}`;
+            document.getElementById("shareLinkText").textContent = shareUrl;
+            
+            return shareUrl;
+        }
+
+        // ========== LOAD DỮ LIỆU TỪ SERVER ==========
+        async function loadProjectData() {
+            if (!currentProjectId || !database) return;
+            
+            showLoading("Đang tải dữ liệu...");
+            
+            try {
+                const snapshot = await database.ref(`projects/${currentProjectId}/data`).once("value");
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    updateFormFromServer(data);
+                    showToast("✅ Đã tải dữ liệu từ server", "success");
+                }
+            } catch (error) {
+                console.error("Lỗi tải dữ liệu:", error);
+                showToast("❌ Lỗi tải dữ liệu từ server", "error");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ========== HÀM LƯU TOÀN BỘ ==========
+        async function saveAllToCloud() {
+            if (!currentProjectId) {
+                showToast("❌ Chưa có project! Hãy tạo hoặc tham gia project trước.", "error");
+                return false;
+            }
+            
+            showLoading("Đang lưu toàn bộ dữ liệu...");
+            
+            try {
+                const formData = collectFormData();
+                
+                // Thêm metadata
+                formData._lastUpdated = new Date().toISOString();
+                formData._lastUpdatedBy = currentUser?.id || "unknown";
+                
+                // Lưu toàn bộ lên server
+                await database.ref(`projects/${currentProjectId}/data`).set(formData);
+                
+                showToast("✅ Đã lưu toàn bộ dữ liệu!", "success");
+                return true;
+                
+            } catch (error) {
+                console.error("Lỗi lưu toàn bộ:", error);
+                showToast("❌ Lỗi lưu dữ liệu: " + error.message, "error");
+                return false;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ========== CHỨC NĂNG CHIA SẺ ==========
+        function generateShareLink() {
+            if (!currentProjectId) {
+                showToast("❌ Chưa có project! Hãy tạo hoặc tham gia project trước.", "error");
+                return;
+            }
+            
+            const shareUrl = updateShareLink();
+            document.getElementById("shareLinkContainer").style.display = "block";
+            
+            // Copy tự động
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast("✅ Đã copy link vào clipboard!", "success");
+            }).catch(() => {
+                // Fallback
+                const tempInput = document.createElement("input");
+                tempInput.value = shareUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                showToast("✅ Đã copy link vào clipboard!", "success");
+            });
+        }
+
+        function copyShareLink() {
+            const shareUrl = document.getElementById("shareLinkText").textContent;
+            if (shareUrl && shareUrl.trim() !== "") {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    showToast("✅ Đã copy link vào clipboard!", "success");
+                }).catch(() => {
+                    const tempInput = document.createElement("input");
+                    tempInput.value = shareUrl;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(tempInput);
+                    showToast("✅ Đã copy link vào clipboard!", "success");
+                });
+            } else {
+                showToast("❌ Chưa có link chia sẻ!", "error");
+            }
+        }
+
+        function hideShareLink() {
+            document.getElementById("shareLinkContainer").style.display = "none";
+        }
+
+        // ========== CHỮ KÝ ĐIỆN TỬ ==========
+        function setupSignaturePads() {
+            // Engineer Signature
+            const engineerCanvas = document.getElementById("engineerSignature");
+            if (engineerCanvas) {
+                engineerSignaturePad = new SignaturePad(engineerCanvas, {
+                    backgroundColor: "rgb(255, 255, 255)",
+                    penColor: "rgb(0, 0, 0)"
+                });
+                
+                document.getElementById("clearEngineerSignature").addEventListener("click", function() {
+                    engineerSignaturePad.clear();
+                    localStorage.removeItem("engineer_signature");
+                    document.getElementById("engineerSignatureDisplay").innerHTML = '<div style="padding: 10px; text-align: center;">Chữ ký sẽ hiển thị ở đây sau khi lưu</div>';
+                    document.getElementById("engineerSignatureDisplay").classList.remove("has-signature");
+                    showToast("Đã xóa chữ ký kỹ sư", "info");
+                    
+                    // Xóa khỏi server
+                    if (currentProjectId && database) {
+                        database.ref(`projects/${currentProjectId}/data/_engineerSignature`).remove();
+                    }
+                });
+                
+                document.getElementById("saveEngineerSignature").addEventListener("click", function() {
+                    if (!engineerSignaturePad.isEmpty()) {
+                        const dataURL = engineerSignaturePad.toDataURL();
+                        localStorage.setItem("engineer_signature", dataURL);
+                        
+                        const displayDiv = document.getElementById("engineerSignatureDisplay");
+                        displayDiv.innerHTML = `<img src="${dataURL}" alt="Engineer Signature" style="max-width: 100%; max-height: 70px;">`;
+                        displayDiv.classList.add("has-signature");
+                        
+                        // Lưu lên server
+                        if (currentProjectId && database) {
+                            database.ref(`projects/${currentProjectId}/data/_engineerSignature`).set(dataURL);
+                        }
+                        
+                        showToast("✅ Đã lưu chữ ký kỹ sư!", "success");
+                        updateHighlight(document.getElementById("engineerName"));
+                    } else {
+                        showToast("❌ Vui lòng ký trước khi lưu!", "error");
+                    }
+                });
+                
+                // Load saved signature
+                const savedEngineerSig = localStorage.getItem("engineer_signature");
+                if (savedEngineerSig) {
+                    document.getElementById("engineerSignatureDisplay").innerHTML = `<img src="${savedEngineerSig}" alt="Engineer Signature" style="max-width: 100%; max-height: 70px;">`;
+                    document.getElementById("engineerSignatureDisplay").classList.add("has-signature");
+                }
+            }
+            
+            // QC Signature
+            const qcCanvas = document.getElementById("qcSignature");
+            if (qcCanvas) {
+                qcSignaturePad = new SignaturePad(qcCanvas, {
+                    backgroundColor: "rgb(255, 255, 255)",
+                    penColor: "rgb(0, 0, 0)"
+                });
+                
+                document.getElementById("clearQcSignature").addEventListener("click", function() {
+                    qcSignaturePad.clear();
+                    localStorage.removeItem("qc_signature");
+                    document.getElementById("qcSignatureDisplay").innerHTML = '<div style="padding: 10px; text-align: center;">Chữ ký sẽ hiển thị ở đây sau khi lưu</div>';
+                    document.getElementById("qcSignatureDisplay").classList.remove("has-signature");
+                    showToast("Đã xóa chữ ký QC", "info");
+                    
+                    // Xóa khỏi server
+                    if (currentProjectId && database) {
+                        database.ref(`projects/${currentProjectId}/data/_qcSignature`).remove();
+                    }
+                });
+                
+                document.getElementById("saveQcSignature").addEventListener("click", function() {
+                    if (!qcSignaturePad.isEmpty()) {
+                        const dataURL = qcSignaturePad.toDataURL();
+                        localStorage.setItem("qc_signature", dataURL);
+                        
+                        const displayDiv = document.getElementById("qcSignatureDisplay");
+                        displayDiv.innerHTML = `<img src="${dataURL}" alt="QC Signature" style="max-width: 100%; max-height: 70px;">`;
+                        displayDiv.classList.add("has-signature");
+                        
+                        // Lưu lên server
+                        if (currentProjectId && database) {
+                            database.ref(`projects/${currentProjectId}/data/_qcSignature`).set(dataURL);
+                        }
+                        
+                        showToast("✅ Đã lưu chữ ký QC!", "success");
+                        updateHighlight(document.getElementById("qcName"));
+                    } else {
+                        showToast("❌ Vui lòng ký trước khi lưu!", "error");
+                    }
+                });
+                
+                // Load saved signature
+                const savedQcSig = localStorage.getItem("qc_signature");
+                if (savedQcSig) {
+                    document.getElementById("qcSignatureDisplay").innerHTML = `<img src="${savedQcSig}" alt="QC Signature" style="max-width: 100%; max-height: 70px;">`;
+                    document.getElementById("qcSignatureDisplay").classList.add("has-signature");
+                }
+            }
+        }
+
+        // ========== CÁC HÀM TIỆN ÍCH ==========
+        function setupFormListeners() {
+            // Auto-resize textareas
+            document.querySelectorAll("textarea").forEach(textarea => {
+                textarea.addEventListener("input", function() {
+                    this.style.height = "auto";
+                    this.style.height = this.scrollHeight + "px";
+                });
+                // Kích hoạt lần đầu
+                setTimeout(() => {
+                    textarea.dispatchEvent(new Event("input"));
+                }, 100);
+            });
+        }
+
+        function updateStatus(message, status = "offline") {
+            const statusEl = document.getElementById("cloudStatus");
+            const textEl = document.getElementById("cloudStatusText");
+            
+            if (statusEl) statusEl.className = "status-indicator " + status;
+            if (textEl) textEl.textContent = message;
+        }
+
+        function updateCloudStatus() {
+            const isOnline = navigator.onLine;
+            updateStatus(isOnline ? "Đang kết nối" : "Mất kết nối", isOnline ? "online" : "offline");
+        }
+
+        // ========== XUẤT PDF ==========
+        function exportToPDF() {
+            showLoading("Đang tạo PDF...");
+            
+            // Tạm ẩn các phần không cần thiết
+            const noPrintElements = document.querySelectorAll(".no-print");
+            const originalDisplay = [];
+            noPrintElements.forEach(el => {
+                originalDisplay.push(el.style.display);
+                el.style.display = "none";
+            });
+            
+            // Thêm watermark cho PDF
+            const watermark = document.createElement("div");
+            watermark.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) rotate(-45deg);
+                    font-size: 60px;
+                    color: rgba(0,0,0,0.1);
+                    z-index: 9999;
+                    pointer-events: none;
+                    font-weight: bold;
+                    white-space: nowrap;
+                ">
+                    NPI RECORD - ${document.getElementById("model").value || "UNKNOWN"}
+                </div>
+            `;
+            document.body.appendChild(watermark);
+            
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById("main-form");
+            
+            html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: "#ffffff",
+                width: element.scrollWidth,
+                height: element.scrollHeight,
+                scrollX: 0,
+                scrollY: -window.scrollY
+            }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png", 1.0);
+                const pdf = new jsPDF({
+                    orientation: "portrait",
+                    unit: "mm",
+                    format: "a4"
+                });
+                
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                const fileName = `NPI-Record-${document.getElementById("model").value || "Unknown"}-${new Date().toISOString().split("T")[0]}.pdf`;
+                pdf.save(fileName);
+                
+                // Khôi phục trạng thái ban đầu
+                watermark.remove();
+                noPrintElements.forEach((el, index) => {
+                    el.style.display = originalDisplay[index];
+                });
+                
+                hideLoading();
+                showToast("✅ Đã xuất PDF thành công!", "success");
+            }).catch(error => {
+                console.error("PDF Export Error:", error);
+                
+                // Khôi phục trạng thái ban đầu
+                watermark.remove();
+                noPrintElements.forEach((el, index) => {
+                    el.style.display = originalDisplay[index];
+                });
+                
+                hideLoading();
+                showToast("❌ Lỗi xuất PDF: " + error.message, "error");
+            });
+        }
+
+        function printForm() {
+            window.print();
+        }
+
+        function resetForm() {
+            if (confirm("Bạn có chắc muốn xóa TẤT CẢ dữ liệu hiện tại?\n\nDữ liệu đã lưu trên cloud vẫn giữ nguyên.")) {
+                document.querySelectorAll("input, textarea, select").forEach(element => {
+                    if (element.type === "checkbox") {
+                        element.checked = false;
+                    } else if (element.type === "date") {
+                        element.value = new Date().toISOString().split("T")[0];
+                    } else if (element.type !== "button" && element.type !== "submit") {
+                        element.value = "";
+                    }
+                    updateHighlight(element);
+                });
+                
+                // Reset signatures
+                if (engineerSignaturePad) engineerSignaturePad.clear();
+                if (qcSignaturePad) qcSignaturePad.clear();
+                localStorage.removeItem("engineer_signature");
+                localStorage.removeItem("qc_signature");
+                const engDisplay = document.getElementById("engineerSignatureDisplay");
+                const qcDisplay = document.getElementById("qcSignatureDisplay");
+                if (engDisplay) {
+                    engDisplay.innerHTML = '<div style="padding: 10px; text-align: center;">Chữ ký sẽ hiển thị ở đây sau khi lưu</div>';
+                    engDisplay.classList.remove("has-signature");
+                }
+                if (qcDisplay) {
+                    qcDisplay.innerHTML = '<div style="padding: 10px; text-align: center;">Chữ ký sẽ hiển thị ở đây sau khi lưu</div>';
+                    qcDisplay.classList.remove("has-signature");
+                }
+                
+                updateStatus("Đã xóa dữ liệu cục bộ", "offline");
+                showToast("✅ Đã xóa dữ liệu cục bộ thành công!", "success");
+            }
+        }
+
+        // ========== KHỞI ĐỘNG TRANG ==========
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("🚀 Khởi động NPI Record Multi-User...");
+            
+            // 1. Khởi tạo người dùng
+            initUser();
+            
+            // 2. Set ngày mặc định
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("date").value = today;
+            
+            // 3. Kiểm tra URL có project ID không
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectIdFromUrl = urlParams.get("project");
+            
+            // 4. Thiết lập các listeners
+            setupHighlightListeners();
+            setupSignaturePads();
+            setupFormListeners();
+            setupRealTimeInput();
+            
+            // 5. Gán sự kiện cho các nút
+            document.getElementById("projectAction").addEventListener("click", handleProjectAction);
+            document.getElementById("saveToCloud").addEventListener("click", saveAllToCloud);
+            document.getElementById("shareForm").addEventListener("click", generateShareLink);
+            document.getElementById("exportPdf").addEventListener("click", exportToPDF);
+            document.getElementById("printForm").addEventListener("click", printForm);
+            document.getElementById("resetForm").addEventListener("click", resetForm);
+            document.getElementById("copyLinkBtn").addEventListener("click", copyShareLink);
+            document.getElementById("closeShareBtn").addEventListener("click", hideShareLink);
+            
+            // 6. Copy project ID khi click
+            document.getElementById("projectIdDisplay")?.addEventListener("click", function() {
+                if (currentProjectId) {
+                    navigator.clipboard.writeText(currentProjectId).then(() => {
+                        showToast("✅ Đã copy Project ID", "success");
+                    });
+                }
+            });
+            
+            // 7. Tự động tham gia nếu có project ID trong URL
+            if (projectIdFromUrl) {
+                setTimeout(() => {
+                    showLoading("Đang kết nối đến project...");
+                    currentProjectId = projectIdFromUrl;
+                    document.getElementById("projectIdDisplay").textContent = `ID: ${projectIdFromUrl}`;
+                    document.getElementById("onlineUsersContainer").style.display = "block";
+                    
+                    // Khởi tạo user
+                    if (!currentUser) initUser();
+                    
+                    // Thiết lập listeners
+                    setupRealtimeListeners();
+                    
+                    // Load dữ liệu
+                    loadProjectData();
+                    
+                    showToast("📡 Đã tự động kết nối đến project", "info");
+                    updateStatus("Đang đồng bộ thời gian thực", "online");
+                    
+                    setTimeout(hideLoading, 1000);
+                }, 500);
+            }
+            
+            // 8. Lắng nghe sự kiện online/offline
+            window.addEventListener("online", updateCloudStatus);
+            window.addEventListener("offline", updateCloudStatus);
+            
+            updateCloudStatus();
         });
-        updateStatus('Đã xóa dữ liệu cục bộ', 'offline');
-    }
-}
 
-function exportToPDF() {
-    // Giữ nguyên chức năng export PDF từ code gốc
-    alert('Chức năng xuất PDF (giữ nguyên từ code cũ)');
-}
+        // ========== SETUP HIGHLIGHT LISTENERS ==========
+        function setupHighlightListeners() {
+            document.querySelectorAll("input, textarea, select").forEach(element => {
+                updateHighlight(element);
+                
+                element.addEventListener("input", function() {
+                    updateHighlight(this);
+                });
+                
+                element.addEventListener("change", function() {
+                    updateHighlight(this);
+                });
+            });
+            
+            document.querySelectorAll(".checkbox-group input[type='checkbox']").forEach(cb => {
+                cb.addEventListener("change", function() {
+                    updateHighlight(this);
+                    const label = this.nextElementSibling;
+                    if (label && this.checked) {
+                        label.classList.add("highlight-text");
+                    } else {
+                        label.classList.remove("highlight-text");
+                    }
+                });
+            });
+        }
 
-function printForm() {
-    window.print();
-}
-
-// Lắng nghe sự kiện online/offline
-window.addEventListener('online', updateCloudStatus);
-window.addEventListener('offline', updateCloudStatus);
-
-// Lắng nghe trước khi đóng trang
-window.addEventListener('beforeunload', function(e) {
-    updateStatus('Đang thoát...', 'syncing');
-});
-
-// ========== HƯỚNG DẪN SỬ DỤNG ==========
-console.log(`
-=== HƯỚNG DẪN SỬ DỤNG NHANH ===
-
-1. CÁCH DÙNG ĐƠN GIẢN:
-   - Người A: Mở file → Điền form → Click "Lưu lên Cloud" → Click "Chia sẻ" → Copy link
-   - Người B: Mở link từ A → Tự động có dữ liệu → Cùng điền
-   - Tự động đồng bộ mỗi 30 giây
-
-2. KHÔNG CẦN CẤU HÌNH:
-   - Mặc định dùng localStorage + URL sharing
-   - Link chứa toàn bộ dữ liệu
-
-3. TÍNH NĂNG:
-   - Đồng bộ đa người dùng
-   - Chia sẻ 1 link
-   - Tự động lưu
-   - Giữ nguyên PDF/Print/Signature
-`);
+        console.log("🔥 NPI Record Multi-User đã sẵn sàng!");
+        console.log("📌 Hướng dẫn sử dụng:");
+        console.log("1. Click 'Tạo/Tham gia Project' để bắt đầu");
+        console.log("2. Tạo project mới hoặc nhập ID project có sẵn");
+        console.log("3. Chia sẻ link cho đồng nghiệp");
+        console.log("4. Cùng nhập dữ liệu thời gian thực!");
     </script>
 </body>
 </html>
