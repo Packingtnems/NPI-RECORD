@@ -30,7 +30,7 @@
         
         .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background-color: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -712,6 +712,43 @@
             border-color: #f44336 !important;
             box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2) !important;
         }
+        
+        /* Tab navigation for multiple processes */
+        .process-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #4a6fa5;
+            margin-bottom: 15px;
+            background-color: #f0f0f0;
+        }
+        
+        .process-tab {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            border-right: 1px solid #ccc;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .process-tab.active {
+            background: #4a6fa5;
+            color: white;
+        }
+        
+        .process-tab:hover:not(.active) {
+            background: #d0d0d0;
+        }
+        
+        .process-content {
+            display: none;
+        }
+        
+        .process-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -848,474 +885,935 @@
                 </div>
             </div>
 
-            <!-- SMT Section -->
-            <div class="form-section" id="section-smt">
-                <div class="section-title">SMT PROCESS</div>
-                
-                <!-- LASER MARKING -->
-                <div class="sub-section-title">LASER MARKING</div>
-                <table>
-                    <tr>
-                        <th width="30%">NỘI DUNG</th>
-                        <th width="70%">GIÁ TRỊ</th>
-                    </tr>
-                    <tr>
-                        <td>Tên chương trình/ Program name</td>
-                        <td>
-                            <input type="text" id="laserProgram" placeholder="Nhập tên chương trình" style="width: 100%;" class="form-input">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Loại QR code/ QR code type</td>
-                        <td>
-                            <input type="text" id="qrType" placeholder="Nhập loại QR code" style="width: 100%;" class="form-input">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Kích thước QR code/ QR code size</td>
-                        <td>
-                            <input type="text" id="qrSize" placeholder="Nhập kích thước QR code" style="width: 100%;" class="form-input">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Cường độ khắc/ Engraving intensity</td>
-                        <td>
-                            <input type="text" id="engravingIntensity" placeholder="Nhập cường độ khắc" style="width: 100%;" class="form-input">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Side BOT: Nội dung QR code/ QR code content</td>
-                        <td class="long-content-cell">
-                            <textarea id="qrContentBot" placeholder="Nhập nội dung QR code mặt BOT" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Side TOP: Nội dung QR code/ QR code content</td>
-                        <td class="long-content-cell">
-                            <textarea id="qrContentTop" placeholder="Nhập nội dung QR code mặt TOP" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Nội dung QR code khi quét bằng máy</td>
-                        <td class="long-content-cell">
-                            <textarea id="qrScanContent" placeholder="Nhập nội dung khi quét QR" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
-                        </td>
-                    </tr>
-                </table>
-                
-                <!-- PRINTER -->
-                <div class="sub-section-title">PRINTER</div>
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <input type="text" id="printerControl" placeholder="Ghi chú về printer" value="Theo Process control sheet đính kèm/According to the attached Process Control Sheet" style="width: 100%;" class="form-input">
-                    </div>
-                </div>
-                
-                <!-- MOUNTER -->
-                <div class="sub-section-title">MOUNTER</div>
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <input type="text" id="mounterControl" placeholder="Ghi chú về mounter" value="Theo Process control sheet đính kèm (có xác nhận và đo giá trị của các bên)/According to the attached Process Control Sheet" style="width: 100%;" class="form-input">
-                    </div>
-                </div>
-                
-                <!-- VISUAL INSPECTION 1 -->
-                <div class="sub-section-title">NGOẠI QUAN VISUAL INSPECTION</div>
-                <table>
-                    <tr>
-                        <th width="40%">HƯỚNG LINH KIỆN/COMPONENT POLARITY</th>
-                        <th width="30%">SỐ LƯỢNG LINH KIỆN/COMPONENT QUANTITY</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="15%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>Theo bảng hướng linh kiện đính kèm (QC)</td>
-                        <td>
-                            <div>Theo BOM/ According to the BOM: 
-                                <input type="text" id="bomQty" class="input-small form-input" placeholder="Số lượng">
-                            </div>
-                            <div style="margin-top: 5px;">Thực tế/ Reality: 
-                                <input type="text" id="actualQty" class="input-small form-input" placeholder="Số lượng">
-                            </div>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="visualResult1" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="engVerify1" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="qcVerify1" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+            <!-- Process Tabs -->
+            <div class="process-tabs no-print" id="processTabs">
+                <button class="process-tab active" data-tab="smt">SMT PROCESS</button>
+                <button class="process-tab" data-tab="through-hole">THROUGH-HOLE</button>
+                <button class="process-tab" data-tab="coating">COATING</button>
+                <button class="process-tab" data-tab="boxbuild">BOXBUILD</button>
+                <button class="process-tab" data-tab="packaging">PACKAGING</button>
+                <button class="process-tab" data-tab="conclusion">KẾT LUẬN</button>
             </div>
 
-            <!-- REFLOW OVEN Section -->
-            <div class="form-section" id="section-reflow">
-                <div class="sub-section-title">LÒ REFLOW/REFLOW OVEN</div>
-                <table>
-                    <tr>
-                        <th width="30%">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
-                        <th width="40%">THÔNG SỐ CÀI ĐẶT MÁY/MACHINE PARAMETERS SETTING</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="15%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>
-                            - Theo Process control sheet đính kèm<br>
-                            - Profile lò đính kèm
-                        </td>
-                        <td class="long-content-cell">
-                            <textarea id="reflowParams" placeholder="Thông số cài đặt" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="reflowResult" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="reflowEng" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="reflowQc" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <!-- AOI -->
-                <div class="sub-section-title">AOI/AUTOMATED OPTICAL INSPECTION</div>
-                <table>
-                    <tr>
-                        <th width="30%">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
-                        <th width="25%">SỐ LƯỢNG PCBA ĐÃ AOI/PCBA AOI INSPECTED QUANTITY</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="30%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div>BOT: 
-                                <input type="text" id="aoiProgramBot" class="input-medium form-input" placeholder="Tên chương trình">
-                            </div>
-                            <div style="margin-top: 5px;">TOP: 
-                                <input type="text" id="aoiProgramTop" class="input-medium form-input" placeholder="Tên chương trình">
-                            </div>
-                        </td>
-                        <td>
-                            <input type="text" id="aoiQty" class="input-small form-input" placeholder="Số lượng" style="width: 100%;">
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="aoiResult" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="aoiEng" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="aoiQc" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <!-- FLYING PROBE -->
-                <div class="sub-section-title">FLYING PROBE (20%)</div>
-                <table>
-                    <tr>
-                        <th width="30%">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
-                        <th width="25%">SỐ LƯỢNG ĐÃ ĐO/MEASURED QUANTITY</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="30%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div>BOT: 
-                                <input type="text" id="probeProgramBot" class="input-medium form-input" placeholder="Tên chương trình">
-                            </div>
-                            <div style="margin-top: 5px;">TOP: 
-                                <input type="text" id="probeProgramTop" class="input-medium form-input" placeholder="Tên chương trình">
-                            </div>
-                        </td>
-                        <td>
-                            <input type="text" id="probeQty" class="input-small form-input" placeholder="Số lượng" style="width: 100%;">
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="probeResult" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="probeEng" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="probeQc" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <!-- VISUAL INSPECTION 2 -->
-                <div class="sub-section-title">NGOẠI QUAN VISUAL INSPECTION</div>
-                <div class="note" style="margin-bottom: 10px;">
-                    KIỂM TRA SỐ LƯỢNG LINH KIỆN, CHẤT LƯỢNG MỐI HÀN, HƯỚNG LINH KIỆN, CÁC LỖI ĐÁNH GIÁ THEO IPC
+            <!-- SMT Process Section -->
+            <div class="process-content active" id="smt-process">
+                <div class="form-section">
+                    <div class="section-title">SMT PROCESS</div>
+                    
+                    <!-- LASER MARKING -->
+                    <div class="sub-section-title">LASER MARKING</div>
+                    <table>
+                        <tr>
+                            <th width="30%">NỘI DUNG</th>
+                            <th width="70%">GIÁ TRỊ</th>
+                        </tr>
+                        <tr>
+                            <td>Tên chương trình/ Program name</td>
+                            <td>
+                                <input type="text" id="laserProgram" placeholder="Nhập tên chương trình" style="width: 100%;" class="form-input">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Loại QR code/ QR code type</td>
+                            <td>
+                                <input type="text" id="qrType" placeholder="Nhập loại QR code" style="width: 100%;" class="form-input">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Kích thước QR code/ QR code size</td>
+                            <td>
+                                <input type="text" id="qrSize" placeholder="Nhập kích thước QR code" style="width: 100%;" class="form-input">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Cường độ khắc/ Engraving intensity</td>
+                            <td>
+                                <input type="text" id="engravingIntensity" placeholder="Nhập cường độ khắc" style="width: 100%;" class="form-input">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Side BOT: Nội dung QR code/ QR code content</td>
+                            <td class="long-content-cell">
+                                <textarea id="qrContentBot" placeholder="Nhập nội dung QR code mặt BOT" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Side TOP: Nội dung QR code/ QR code content</td>
+                            <td class="long-content-cell">
+                                <textarea id="qrContentTop" placeholder="Nhập nội dung QR code mặt TOP" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Nội dung QR code khi quét bằng máy</td>
+                            <td class="long-content-cell">
+                                <textarea id="qrScanContent" placeholder="Nhập nội dung khi quét QR" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- PRINTER -->
+                    <div class="sub-section-title">PRINTER</div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <input type="text" id="printerControl" placeholder="Ghi chú về printer" value="Theo Process control sheet đính kèm/According to the attached Process Control Sheet" style="width: 100%;" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <!-- MOUNTER -->
+                    <div class="sub-section-title">MOUNTER</div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <input type="text" id="mounterControl" placeholder="Ghi chú về mounter" value="Theo Process control sheet đính kèm (có xác nhận và đo giá trị của các bên)/According to the attached Process Control Sheet" style="width: 100%;" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <!-- VISUAL INSPECTION 1 -->
+                    <div class="sub-section-title">NGOẠI QUAN VISUAL INSPECTION</div>
+                    <table>
+                        <tr>
+                            <th width="40%">HƯỚNG LINH KIỆN/COMPONENT POLARITY</th>
+                            <th width="30%">SỐ LƯỢNG LINH KIỆN/COMPONENT QUANTITY</th>
+                            <th width="15%">KẾT QUẢ/RESULT</th>
+                            <th width="15%">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>Theo bảng hướng linh kiện đính kèm (QC)</td>
+                            <td>
+                                <div>Theo BOM/ According to the BOM: 
+                                    <input type="text" id="bomQty" class="input-small form-input" placeholder="Số lượng">
+                                </div>
+                                <div style="margin-top: 5px;">Thực tế/ Reality: 
+                                    <input type="text" id="actualQty" class="input-small form-input" placeholder="Số lượng">
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="visualResult1" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="engVerify1" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="qcVerify1" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- REFLOW OVEN -->
+                    <div class="sub-section-title">LÒ REFLOW/REFLOW OVEN</div>
+                    <table>
+                        <tr>
+                            <th width="30%">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
+                            <th width="40%">THÔNG SỐ CÀI ĐẶT MÁY/MACHINE PARAMETERS SETTING</th>
+                            <th width="15%">KẾT QUẢ/RESULT</th>
+                            <th width="15%">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                - Theo Process control sheet đính kèm<br>
+                                - Profile lò đính kèm
+                            </td>
+                            <td class="long-content-cell">
+                                <textarea id="reflowParams" placeholder="Thông số cài đặt" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="reflowResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="reflowEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="reflowQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- AOI -->
+                    <div class="sub-section-title">AOI/AUTOMATED OPTICAL INSPECTION</div>
+                    <table>
+                        <tr>
+                            <th width="30%">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
+                            <th width="25%">SỐ LƯỢNG PCBA ĐÃ AOI/PCBA AOI INSPECTED QUANTITY</th>
+                            <th width="15%">KẾT QUẢ/RESULT</th>
+                            <th width="30%">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>BOT: 
+                                    <input type="text" id="aoiProgramBot" class="input-medium form-input" placeholder="Tên chương trình">
+                                </div>
+                                <div style="margin-top: 5px;">TOP: 
+                                    <input type="text" id="aoiProgramTop" class="input-medium form-input" placeholder="Tên chương trình">
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" id="aoiQty" class="input-small form-input" placeholder="Số lượng" style="width: 100%;">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="aoiResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="aoiEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="aoiQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- FLYING PROBE -->
+                    <div class="sub-section-title">FLYING PROBE (20%)</div>
+                    <table>
+                        <tr>
+                            <th width="30%">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
+                            <th width="25%">SỐ LƯỢNG ĐÃ ĐO/MEASURED QUANTITY</th>
+                            <th width="15%">KẾT QUẢ/RESULT</th>
+                            <th width="30%">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>BOT: 
+                                    <input type="text" id="probeProgramBot" class="input-medium form-input" placeholder="Tên chương trình">
+                                </div>
+                                <div style="margin-top: 5px;">TOP: 
+                                    <input type="text" id="probeProgramTop" class="input-medium form-input" placeholder="Tên chương trình">
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" id="probeQty" class="input-small form-input" placeholder="Số lượng" style="width: 100%;">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="probeResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="probeEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="probeQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- VISUAL INSPECTION 2 -->
+                    <div class="sub-section-title">NGOẠI QUAN VISUAL INSPECTION</div>
+                    <div class="note" style="margin-bottom: 10px;">
+                        KIỂM TRA SỐ LƯỢNG LINH KIỆN, CHẤT LƯỢNG MỐI HÀN, HƯỚNG LINH KIỆN, CÁC LỖI ĐÁNH GIÁ THEO IPC
+                    </div>
+                    <table>
+                        <tr>
+                            <th width="40%">NỘI DUNG KIỂM TRA</th>
+                            <th width="30%">KẾT QUẢ</th>
+                            <th width="30%">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>- Số lượng linh kiện/ Component Quantity</td>
+                            <td style="text-align: center;">
+                                <select id="visual2Result1" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td rowspan="4" style="text-align: center; vertical-align: middle;">
+                                <div>ENG: 
+                                    <input type="text" id="visual2Eng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 10px;">QC: 
+                                    <input type="text" id="visual2Qc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- Chất lượng mối hàn/ Solder Joint Quality</td>
+                            <td style="text-align: center;">
+                                <select id="visual2Result2" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- Hướng linh kiện/ Component Orientation</td>
+                            <td style="text-align: center;">
+                                <select id="visual2Result3" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- Các lỗi đánh giá theo IPC/ Defects Evaluated per IPC</td>
+                            <td style="text-align: center;">
+                                <select id="visual2Result4" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-                <table>
-                    <tr>
-                        <th width="40%">NỘI DUNG KIỂM TRA</th>
-                        <th width="30%">KẾT QUẢ</th>
-                        <th width="30%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>- Số lượng linh kiện/ Component Quantity</td>
-                        <td style="text-align: center;">
-                            <select id="visual2Result1" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                        <td rowspan="4" style="text-align: center; vertical-align: middle;">
-                            <div>ENG: 
-                                <input type="text" id="visual2Eng" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                            <div style="margin-top: 10px;">QC: 
-                                <input type="text" id="visual2Qc" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>- Chất lượng mối hàn/ Solder Joint Quality</td>
-                        <td style="text-align: center;">
-                            <select id="visual2Result2" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>- Hướng linh kiện/ Component Orientation</td>
-                        <td style="text-align: center;">
-                            <select id="visual2Result3" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>- Các lỗi đánh giá theo IPC/ Defects Evaluated per IPC</td>
-                        <td style="text-align: center;">
-                            <select id="visual2Result4" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                    </tr>
-                </table>
             </div>
 
-            <!-- THROUGH-HOLE Section -->
-            <div class="form-section" id="section-through-hole">
-                <div class="section-title">THROUGH-HOLE PROCESS</div>
-                
-                <div class="sub-section-title">QUY TRÌNH HÀN TAY/HAND SOLDERING PROCESS</div>
-                <table>
-                    <tr>
-                        <th width="40%">THÔNG SỐ/ PARAMETERS</th>
-                        <th width="30%">GIÁ TRỊ/ VALUE</th>
-                        <th width="15%">KẾT QUẢ/RESULT</th>
-                        <th width="15%">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>Nhiệt độ mỏ hàn/ Soldering iron temperature</td>
-                        <td>
-                            <input type="text" id="solderTemp" placeholder="VD: 350°C" style="width: 100%;" class="form-input">
-                        </td>
-                        <td style="text-align: center;">
-                            <select id="solderResult" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                        <td style="text-align: center;">
-                            <div>ENG: 
-                                <input type="text" id="solderEng" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                            <div style="margin-top: 2px;">QC: 
-                                <input type="text" id="solderQc" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <div class="sub-section-title">VISUAL INSPECTION</div>
-                <div class="note" style="margin-bottom: 10px;">
-                    KIỂM TRA CHẤT LƯỢNG MỐI HÀN THEO TIÊU CHUẨN IPC
+            <!-- THROUGH-HOLE Process Section -->
+            <div class="process-content" id="through-hole-process">
+                <div class="form-section">
+                    <div class="section-title">THROUGH-HOLE PROCESS</div>
+                    
+                    <!-- Component Quantity Check -->
+                    <div class="sub-section-title">KIỂM TRA SỐ LƯỢNG LINH KIỆN / COMPONENT QUANTITY CHECK</div>
+                    <table>
+                        <tr>
+                            <th width="40%">NỘI DUNG KIỂM TRA/INSPECTION CONTENT</th>
+                            <th width="30%">GIÁ TRỊ/VALUE</th>
+                            <th width="15%">KẾT QUẢ/RESULT</th>
+                            <th width="15%">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>ĐÚNG MÃ / CORRECT PART NUMBER</td>
+                            <td>
+                                <input type="text" id="thPartNumber" placeholder="Nhập thông tin" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="thPartNumberResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="thQuantityEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="thQuantityQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>SỐ LƯỢNG / QUANTITY</td>
+                            <td>
+                                <input type="text" id="thQuantity" placeholder="Nhập số lượng" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="thQuantityResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="thQuantityEng2" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="thQuantityQc2" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Soldering -->
+                    <div class="sub-section-title">HÀN / SOLDERING</div>
+                    <table>
+                        <tr>
+                            <th width="40%">THÔNG SỐ / PARAMETERS</th>
+                            <th width="30%">GIÁ TRỊ / VALUE</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>NHIỆT ĐỘ CÀI ĐẶT HÀN TAY / HAND SOLDERING TEMPERATURE SETTING</td>
+                            <td>
+                                <input type="text" id="handSolderTemp" placeholder="VD: 350°C" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="handSolderResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td rowspan="3" style="text-align: center; vertical-align: middle;">
+                                <div>ENG: 
+                                    <input type="text" id="thSolderingEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 10px;">QC: 
+                                    <input type="text" id="thSolderingQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Loại nozzle/Nozzle type:</td>
+                            <td>
+                                <input type="text" id="nozzleType" placeholder="Nhập loại nozzle" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="nozzleResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Preheat (ºC): Solder pot (ºC): Thời gian preheat (s)</td>
+                            <td>
+                                <input type="text" id="solderParams" placeholder="VD: 100°C, 250°C, 30s" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="solderParamsResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Testing -->
+                    <div class="sub-section-title">TESTING</div>
+                    <table>
+                        <tr>
+                            <th width="40%">GIÁ TRỊ KIỂM TRA / INSPECTION VALUE</th>
+                            <th width="30%">CÁC BƯỚC KIỂM TRA / INSPECTION STEPS</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>Xem file đính kèm Test đính kèm / See attached file</td>
+                            <td>Xem file đính kèm Test đính kèm / See attached file</td>
+                            <td style="text-align: center;">
+                                <select id="testingResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="thTestingEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="thTestingQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- PCBA Cleaning -->
+                    <div class="sub-section-title">VỆ SINH PCBA / PCBA CLEANING</div>
+                    <table>
+                        <tr>
+                            <th width="40%">PHƯƠNG PHÁP VỆ SINH / CLEANING METHOD</th>
+                            <th width="30%">DỤNG CỤ & DUNG DỊCH / TOOLS & SOLUTION</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" id="cleaningMethod" placeholder="Nhập phương pháp vệ sinh" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>
+                                <input type="text" id="cleaningTools" placeholder="Nhập dụng cụ & dung dịch" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="cleaningResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="thCleaningEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="thCleaningQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Visual Inspection -->
+                    <div class="sub-section-title">NGOẠI QUAN VISUAL INSPECTION</div>
+                    <table>
+                        <tr>
+                            <th width="40%">CHẤT LƯỢNG MỐI HÀN VÀ VỆ SINH / SOLDER JOINT QUALITY AND CLEANLINESS</th>
+                            <th width="30%">ĐÚNG, ĐỦ LINH KIỆN / CORRECT AND COMPLETE COMPONENTS</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" id="thVisualQuality" placeholder="Nhập đánh giá chất lượng" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>
+                                <input type="text" id="thVisualComponents" placeholder="Nhập đánh giá linh kiện" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="thVisualResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="thVisualEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="thVisualQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-                <table>
-                    <tr>
-                        <th width="40%">TIÊU CHÍ/ CRITERIA</th>
-                        <th width="30%">KẾT QUẢ/ RESULT</th>
-                        <th width="30%">XÁC NHẬN/ VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td>- Chất lượng mối hàn/ Solder joint quality</td>
-                        <td style="text-align: center;">
-                            <select id="thVisual1" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                        <td rowspan="3" style="text-align: center; vertical-align: middle;">
-                            <div>ENG: 
-                                <input type="text" id="thEng" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                            <div style="margin-top: 10px;">QC: 
-                                <input type="text" id="thQc" class="input-medium form-input" placeholder="Tên">
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>- Độ ướt chân/ Wetting</td>
-                        <td style="text-align: center;">
-                            <select id="thVisual2" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>- Không có cầu chì/ No solder bridges</td>
-                        <td style="text-align: center;">
-                            <select id="thVisual3" style="width: 100%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </td>
-                    </tr>
-                </table>
+            </div>
+
+            <!-- COATING Process Section -->
+            <div class="process-content" id="coating-process">
+                <div class="form-section">
+                    <div class="section-title">COATING PROCESS</div>
+                    
+                    <div class="sub-section-title">COATING</div>
+                    <table>
+                        <tr>
+                            <th width="40%">THÔNG SỐ / PARAMETERS</th>
+                            <th width="40%">GIÁ TRỊ / VALUE</th>
+                            <th width="10%">KẾT QUẢ / RESULT</th>
+                            <th width="10%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>- Dung dịch coating/ Coating solution:</td>
+                            <td>
+                                <input type="text" id="coatingSolution" placeholder="Nhập dung dịch coating" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="coatingSolutionResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td rowspan="5" style="text-align: center; vertical-align: middle;">
+                                <div>ENG: 
+                                    <input type="text" id="coatingEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 10px;">QC: 
+                                    <input type="text" id="coatingQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- Phương pháp coating/ Coating method:</td>
+                            <td>
+                                <input type="text" id="coatingMethod" placeholder="Nhập phương pháp coating" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="coatingMethodResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- Phương pháp sấy/ Drying method:</td>
+                            <td>
+                                <input type="text" id="dryingMethod" placeholder="Nhập phương pháp sấy" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="dryingMethodResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- Nhiệt độ sấy/ Drying temperature:</td>
+                            <td>
+                                <input type="text" id="dryingTemp" placeholder="VD: 80°C" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="dryingTempResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- Thời gian sấy/ Drying time:</td>
+                            <td>
+                                <input type="text" id="dryingTime" placeholder="VD: 30 phút" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="dryingTimeResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- BOXBUILD Process Section -->
+            <div class="process-content" id="boxbuild-process">
+                <div class="form-section">
+                    <div class="section-title">LẮP RÁP / BOXBUILD PROCESS</div>
+                    
+                    <!-- Assembly Jig/Tool -->
+                    <div class="sub-section-title">LẮP RÁP BOXBUILD</div>
+                    <table>
+                        <tr>
+                            <th width="40%">JIG/DỤNG CỤ LẮP RÁP / ASSEMBLY JIG OR TOOL</th>
+                            <th width="30%">TIÊU CHUẨN / SPECIFICATION</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" id="assemblyJig" placeholder="Nhập JIG/dụng cụ" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>
+                                <input type="text" id="assemblySpec" placeholder="Nhập tiêu chuẩn" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="assemblyJigResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="assemblyJigEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="assemblyJigQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Assembly Component -->
+                    <div class="sub-section-title">SỐ LƯỢNG LINH KIỆN LẮP RÁP / ASSEMBLY COMPONENT QUANTITY</div>
+                    <table>
+                        <tr>
+                            <th width="40%">SỐ LƯỢNG LINH KIỆN / COMPONENT QUANTITY</th>
+                            <th width="30%">HƯỚNG/CHIỀU LẮP LINH KIỆN / COMPONENT ORIENTATION</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" id="assemblyQty" placeholder="Nhập số lượng" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>Theo bản vẽ/ According to the drawing</td>
+                            <td style="text-align: center;">
+                                <select id="assemblyQtyResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="assemblyQtyEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="assemblyQtyQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- IMEI/Label -->
+                    <div class="sub-section-title">IMEI / LABEL</div>
+                    <table>
+                        <tr>
+                            <th width="25%">VỊ TRÍ DÁN NHÃN / LABEL POSITION</th>
+                            <th width="20%">HƯỚNG DÁN NHÃN / LABEL ORIENTATION</th>
+                            <th width="35%">NỘI DUNG NHÃN / LABEL CONTENT</th>
+                            <th width="10%">KẾT QUẢ / RESULT</th>
+                            <th width="10%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" id="labelPosition" placeholder="Nhập vị trí" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>
+                                <input type="text" id="labelOrientation" placeholder="Nhập hướng" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>
+                                <input type="text" id="labelContent" placeholder="Nhập nội dung" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="labelResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="labelEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="labelQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Visual Inspection -->
+                    <div class="sub-section-title">KIỂM TRA NGOẠI QUAN / VISUAL INSPECTION</div>
+                    <table>
+                        <tr>
+                            <th width="40%">TIÊU CHUẨN KIỂM TRA / INSPECTION REQUIREMENT</th>
+                            <th width="40%">MÔ TẢ / DESCRIPTION</th>
+                            <th width="10%">KẾT QUẢ / RESULT</th>
+                            <th width="10%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" id="boxInspectionReq" placeholder="Nhập tiêu chuẩn" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>
+                                <input type="text" id="boxInspectionDesc" placeholder="Nhập mô tả" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="boxInspectionResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="boxInspectionEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="boxInspectionQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PACKAGING Process Section -->
+            <div class="process-content" id="packaging-process">
+                <div class="form-section">
+                    <div class="section-title">ĐÓNG GÓI / PACKAGING PROCESS</div>
+                    
+                    <!-- Packaging -->
+                    <div class="sub-section-title">ĐÓNG GÓI / PACKAGING</div>
+                    <table>
+                        <tr>
+                            <th width="30%">VẬT LIỆU ĐÓNG GÓI / PACKAGING MATERIAL</th>
+                            <th width="30%">PHƯƠNG PHÁP ĐÓNG GÓI / PACKAGING METHOD</th>
+                            <th width="20%">SỐ LƯỢNG/THÙNG / QUANTITY PER BOX</th>
+                            <th width="10%">KẾT QUẢ / RESULT</th>
+                            <th width="10%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>- Theo BOM Đính kèm/ Attached BOM</div>
+                                <div>- Bổ sung (nếu có)/ Additional (if any): 
+                                    <input type="text" id="packagingMaterial" placeholder="Nhập bổ sung" style="width: 100%; margin-top: 5px;" class="form-input">
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" id="packagingMethod" placeholder="Nhập phương pháp" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>
+                                <input type="text" id="packagingQty" placeholder="Nhập số lượng" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="packagingResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="packagingEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="packagingQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Label -->
+                    <div class="sub-section-title">LABEL</div>
+                    <table>
+                        <tr>
+                            <th width="40%">NỘI DUNG LABEL / LABEL CONTENT</th>
+                            <th width="40%">MẪU HOẶC HÌNH ẢNH LABEL THỰC TẾ / ACTUAL IMAGE/SAMPLE</th>
+                            <th width="10%">KẾT QUẢ / RESULT</th>
+                            <th width="10%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" id="packLabelContent" placeholder="Nhập nội dung label" style="width: 100%;" class="form-input">
+                            </td>
+                            <td>
+                                <div>- Thêm hình ảnh hoặc mẫu thực tế vào ô này</div>
+                                <div>- Add actual image in this box</div>
+                                <textarea id="packLabelImage" placeholder="Mô tả hoặc link hình ảnh" rows="3" style="width: 100%; margin-top: 5px;" class="form-textarea"></textarea>
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="packLabelResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div>ENG: 
+                                    <input type="text" id="packLabelEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 2px;">QC: 
+                                    <input type="text" id="packLabelQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
 
             <!-- CONCLUSION Section -->
-            <div class="form-section" id="section-conclusion">
-                <div class="section-title">KẾT LUẬN/ CONCLUSION</div>
-                
-                <table>
-                    <tr>
-                        <th width="20%">KẾT QUẢ CUỐI CÙNG/FINAL RESULT</th>
-                        <th width="25%">RỦI RO TRONG CÁC CÔNG ĐOẠN/RISKS IN EACH PROCESS STEP</th>
-                        <th width="25%">BÀI HỌC TỪNG CÔNG ĐOẠN/LESSONS LEARNED FROM EACH PROCESS STEP</th>
-                        <th width="30%">CẢI TIẾN CÔNG ĐOẠN/PROCESS IMPROVEMENT</th>
-                    </tr>
-                    <tr>
-                        <td style="text-align: center; vertical-align: middle;" class="conclusion-cell">
-                            <select id="finalResult" style="width: 90%;" class="form-select">
-                                <option value="">-- Chọn --</option>
-                                <option value="PASS">PASS</option>
-                                <option value="FAIL">FAIL</option>
-                                <option value="CONDITIONAL">CONDITIONAL PASS</option>
-                            </select>
-                        </td>
-                        <td class="conclusion-cell long-content-cell">
-                            <textarea id="processRisks" placeholder="Rủi ro trong các công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
-                        </td>
-                        <td class="conclusion-cell long-content-cell">
-                            <textarea id="lessonsLearned" placeholder="Bài học từng công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
-                        </td>
-                        <td class="conclusion-cell long-content-cell">
-                            <textarea id="processImprovement" placeholder="Cải tiến công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
-                        </td>
-                    </tr>
-                </table>
-                
-                <div class="form-row" style="margin-top: 15px;">
-                    <div class="form-group">
-                        <label for="totalQty">Tổng số lượng (PCBA): <br>Total qty (PCBA):</label>
-                        <input type="number" id="totalQty" placeholder="Nhập tổng số lượng" class="form-input" min="0">
-                    </div>
+            <div class="process-content" id="conclusion-process">
+                <div class="form-section">
+                    <div class="section-title">KẾT LUẬN / CONCLUSION</div>
                     
-                    <div class="form-group">
-                        <label for="okQty">OK :</label>
-                        <input type="number" id="okQty" placeholder="Nhập số lượng OK" class="form-input" min="0">
-                    </div>
+                    <table>
+                        <tr>
+                            <th width="20%">KẾT QUẢ CUỐI CÙNG / FINAL RESULT</th>
+                            <th width="25%">RỦI RO TRONG CÁC CÔNG ĐOẠN / RISKS IN EACH PROCESS STEP</th>
+                            <th width="25%">BÀI HỌC TỪNG CÔNG ĐOẠN / LESSONS LEARNED FROM EACH PROCESS STEP</th>
+                            <th width="30%">CẢI TIẾN CÔNG ĐOẠN / PROCESS IMPROVEMENT</th>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;" class="conclusion-cell">
+                                <select id="finalResult" style="width: 90%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="PASS">PASS</option>
+                                    <option value="FAIL">FAIL</option>
+                                    <option value="CONDITIONAL">CONDITIONAL PASS</option>
+                                </select>
+                            </td>
+                            <td class="conclusion-cell long-content-cell">
+                                <textarea id="processRisks" placeholder="Rủi ro trong các công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
+                            </td>
+                            <td class="conclusion-cell long-content-cell">
+                                <textarea id="lessonsLearned" placeholder="Bài học từng công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
+                            </td>
+                            <td class="conclusion-cell long-content-cell">
+                                <textarea id="processImprovement" placeholder="Cải tiến công đoạn" rows="8" style="width: 100%; height: auto; min-height: 120px;" class="form-textarea long-content"></textarea>
+                            </td>
+                        </tr>
+                    </table>
                     
-                    <div class="form-group">
-                        <label for="ngQty">NG (scrap) :</label>
-                        <input type="number" id="ngQty" placeholder="Nhập số lượng NG" class="form-input" min="0">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="defectRate">Tỷ lệ lỗi/ Defect rate (%) : <br> (NG/Total)</label>
-                        <input type="text" id="defectRate" placeholder="Tự động tính toán" readonly style="background-color: #f0f0f0;" class="form-input">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label for="defectDescription">Mô tả chi tiết lỗi / detailed defect description:</label>
-                        <textarea id="defectDescription" placeholder="Mô tả chi tiết các lỗi" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
-                    </div>
-                </div>
-                
-                <!-- Electronic Signatures -->
-                <div class="sub-section-title">XÁC NHẬN ĐIỆN TỬ - ELECTRONIC SIGNATURES</div>
-                <div class="two-column" style="margin-top: 10px;">
-                    <div class="signature-section">
-                        <label>Ký xác nhận của Kỹ sư / Engineer Signature:</label>
-                        <div class="signature-container">
-                            <canvas id="engineerSignature" class="signature-pad no-export"></canvas>
-                            <div class="signature-controls no-print no-export">
-                                <button type="button" id="clearEngineerSignature">Xóa chữ ký</button>
-                                <button type="button" id="saveEngineerSignature">Lưu chữ ký</button>
-                            </div>
-                            <div class="signature-display" id="engineerSignatureDisplay">
-                                <div style="padding: 10px; text-align: center;">Chữ ký sẽ hiển thị ở đây sau khi lưu</div>
-                            </div>
+                    <div class="form-row" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label for="totalQty">Tổng số lượng (PCBA): <br>Total qty (PCBA):</label>
+                            <input type="number" id="totalQty" placeholder="Nhập tổng số lượng" class="form-input" min="0">
                         </div>
-                        <div style="margin-top: 5px;">
-                            <label for="engineerName" class="inline-label">Tên Kỹ sư / Engineer Name:</label>
-                            <input type="text" id="engineerName" placeholder="Nhập tên kỹ sư" style="width: 200px;" class="form-input">
+                        
+                        <div class="form-group">
+                            <label for="okQty">OK :</label>
+                            <input type="number" id="okQty" placeholder="Nhập số lượng OK" class="form-input" min="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ngQty">NG (scrap) :</label>
+                            <input type="number" id="ngQty" placeholder="Nhập số lượng NG" class="form-input" min="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="defectRate">Tỷ lệ lỗi/ Defect rate (%) : <br> (NG/Total)</label>
+                            <input type="text" id="defectRate" placeholder="Tự động tính toán" readonly style="background-color: #f0f0f0;" class="form-input">
                         </div>
                     </div>
                     
-                    <div class="signature-section">
-                        <label>Ký xác nhận của QC / QC Signature:</label>
-                        <div class="signature-container">
-                            <canvas id="qcSignature" class="signature-pad no-export"></canvas>
-                            <div class="signature-controls no-print no-export">
-                                <button type="button" id="clearQcSignature">Xóa chữ ký</button>
-                                <button type="button" id="saveQcSignature">Lưu chữ ký</button>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="defectDescription">Mô tả chi tiết lỗi / detailed defect description:</label>
+                            <textarea id="defectDescription" placeholder="Mô tả chi tiết các lỗi" rows="4" style="width: 100%;" class="form-textarea long-content"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Electronic Signatures -->
+                    <div class="sub-section-title">XÁC NHẬN ĐIỆN TỬ - ELECTRONIC SIGNATURES</div>
+                    <div class="two-column" style="margin-top: 10px;">
+                        <div class="signature-section">
+                            <label>Ký xác nhận của Kỹ sư / Engineer Signature:</label>
+                            <div class="signature-container">
+                                <canvas id="engineerSignature" class="signature-pad no-export"></canvas>
+                                <div class="signature-controls no-print no-export">
+                                    <button type="button" id="clearEngineerSignature">Xóa chữ ký</button>
+                                    <button type="button" id="saveEngineerSignature">Lưu chữ ký</button>
+                                </div>
+                                <div class="signature-display" id="engineerSignatureDisplay">
+                                    <div style="padding: 10px; text-align: center;">Chữ ký sẽ hiển thị ở đây sau khi lưu</div>
+                                </div>
                             </div>
-                            <div class="signature-display" id="qcSignatureDisplay">
-                                <div style="padding: 10px; text-align: center;">Chữ ký sẽ hiển thị ở đây sau khi lưu</div>
+                            <div style="margin-top: 5px;">
+                                <label for="engineerName" class="inline-label">Tên Kỹ sư / Engineer Name:</label>
+                                <input type="text" id="engineerName" placeholder="Nhập tên kỹ sư" style="width: 200px;" class="form-input">
                             </div>
                         </div>
-                        <div style="margin-top: 5px;">
-                            <label for="qcName" class="inline-label">Tên QC / QC Name:</label>
-                            <input type="text" id="qcName" placeholder="Nhập tên QC" style="width: 200px;" class="form-input">
+                        
+                        <div class="signature-section">
+                            <label>Ký xác nhận của QC / QC Signature:</label>
+                            <div class="signature-container">
+                                <canvas id="qcSignature" class="signature-pad no-export"></canvas>
+                                <div class="signature-controls no-print no-export">
+                                    <button type="button" id="clearQcSignature">Xóa chữ ký</button>
+                                    <button type="button" id="saveQcSignature">Lưu chữ ký</button>
+                                </div>
+                                <div class="signature-display" id="qcSignatureDisplay">
+                                    <div style="padding: 10px; text-align: center;">Chữ ký sẽ hiển thị ở đây sau khi lưu</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <label for="qcName" class="inline-label">Tên QC / QC Name:</label>
+                                <input type="text" id="qcName" placeholder="Nhập tên QC" style="width: 200px;" class="form-input">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2139,110 +2637,622 @@
         }
 
         // ========== XUẤT PDF GIỐNG FILE MẪU ==========
-        // ========== XUẤT PDF GIỐNG FILE MẪU ==========
-async function exportToPDF() {
-    // Validate required fields
+       async function exportToPDF() {
     if (!validateForm()) {
         showToast('Vui lòng điền đầy đủ các trường bắt buộc (Mã hàng và Khách hàng) trước khi xuất PDF!', 'error');
         return;
     }
     
-    // Show loading
-    showLoading('Đang tạo PDF...');
-    const exportBtn = document.getElementById('exportPdf');
-    const originalText = exportBtn.innerHTML;
-    exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo PDF...';
-    exportBtn.disabled = true;
+    showLoading("Đang tạo PDF... Vui lòng đợi...");
     
     try {
-        // Tạo template PDF với đúng cấu trúc như file mẫu
-        const pdfTemplate = document.createElement('div');
-        pdfTemplate.id = 'pdf-export-container';
-        pdfTemplate.style.position = 'absolute';
-        pdfTemplate.style.left = '-9999px';
-        pdfTemplate.style.top = '0';
-        pdfTemplate.style.width = '210mm';
-        pdfTemplate.style.minHeight = '297mm';
-        pdfTemplate.style.backgroundColor = 'white';
-        pdfTemplate.style.padding = '15mm';
-        pdfTemplate.style.fontFamily = 'Arial, sans-serif';
-        pdfTemplate.style.fontSize = '10pt';
-        pdfTemplate.style.lineHeight = '1.2';
-        pdfTemplate.style.boxSizing = 'border-box';
+        // 1. Thu thập tất cả dữ liệu
+        const allData = collectFormData();
+        const processes = [];
+        if (allData.processSMT) processes.push('SMT');
+        if (allData.processThroughHole) processes.push('THROUGH HOLE');
+        if (allData.processCoating) processes.push('COATING');
+        if (allData.processBoxbuild) processes.push('BOXBUILD');
+        if (allData.processPacking) processes.push('PACKING');
         
-        // Tạo nội dung PDF giống file mẫu
-        pdfTemplate.innerHTML = generatePDFContentNew();
-        document.body.appendChild(pdfTemplate);
+        // 2. Tạo nội dung PDF
+        const pdfContent = createPDFContent(allData, processes);
         
-        // Wait for rendering
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // 3. Tạo HTML đầy đủ cho tất cả các tab
+        const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>NPI Record - ${allData.model || 'Unknown'}</title>
+            <style>
+                @page {
+                    size: A4;
+                    margin: 15mm;
+                }
+                
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 10pt;
+                    line-height: 1.2;
+                    color: #000;
+                    margin: 0;
+                    padding: 0;
+                    width: 210mm;
+                }
+                
+                .page-container {
+                    width: 210mm;
+                    min-height: 297mm;
+                    padding: 15mm;
+                    box-sizing: border-box;
+                }
+                
+                .header {
+                    text-align: center;
+                    margin-bottom: 15px;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 10px;
+                }
+                
+                .header h1 {
+                    margin-bottom: 5px;
+                    font-size: 18pt;
+                    font-weight: bold;
+                }
+                
+                .form-section {
+                    border: 1px solid #000;
+                    border-radius: 2px;
+                    padding: 10px;
+                    margin-bottom: 15px;
+                    page-break-inside: avoid;
+                }
+                
+                .section-title {
+                    background-color: #e0e0e0;
+                    color: #000;
+                    padding: 8px 10px;
+                    margin: -10px -10px 10px -10px;
+                    border-bottom: 1px solid #000;
+                    font-size: 12pt;
+                    font-weight: bold;
+                }
+                
+                .sub-section-title {
+                    background-color: #f0f0f0;
+                    color: #000;
+                    padding: 6px 8px;
+                    margin: 10px -10px;
+                    border-top: 1px solid #ddd;
+                    border-bottom: 1px solid #ddd;
+                    font-size: 11pt;
+                    font-weight: bold;
+                }
+                
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                    font-size: 9pt;
+                }
+                
+                th, td {
+                    border: 1px solid #000;
+                    padding: 6px;
+                    vertical-align: top;
+                }
+                
+                th {
+                    background-color: #f0f0f0;
+                    font-weight: bold;
+                    text-align: center;
+                }
+                
+                .highlight {
+                    color: #1565C0 !important;
+                    font-weight: 600 !important;
+                    background-color: #E3F2FD !important;
+                }
+                
+                .highlight-box {
+                    border-left: 3px solid #1565C0;
+                    padding: 4px 8px;
+                    margin: 2px 0;
+                }
+                
+                .signature-container {
+                    border: 2px solid #1565C0;
+                    padding: 10px;
+                    text-align: center;
+                    min-height: 80px;
+                    margin: 10px 0;
+                }
+                
+                .signature-img {
+                    max-width: 100%;
+                    max-height: 70px;
+                }
+                
+                .page-break {
+                    page-break-before: always;
+                }
+                
+                .no-print {
+                    display: none !important;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="page-container">
+                ${pdfContent}
+            </div>
+        </body>
+        </html>
+        `;
         
-        // Convert to canvas
-        const canvas = await html2canvas(pdfTemplate, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            allowTaint: true
-        });
+        // 4. Mở cửa sổ mới và in
+        const printWindow = window.open('', '_blank', 'width=900,height=700');
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
         
-        // Remove template
-        document.body.removeChild(pdfTemplate);
-        
-        // Create PDF
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-        });
-        
-        // Calculate dimensions
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        
-        const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        // Add image to PDF
-        const imgData = canvas.toDataURL('image/jpeg', 0.92);
-        
-        // Handle multi-page
-        let currentHeight = 0;
-        let remainingHeight = imgHeight;
-        
-        while (remainingHeight > 0) {
-            const sectionHeight = Math.min(remainingHeight, pageHeight);
+        // 5. Chờ nội dung tải xong rồi kích hoạt in
+        setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
             
-            pdf.addImage(imgData, 'JPEG', 0, -currentHeight, imgWidth, imgHeight);
+            // Tự động đóng sau khi in (tùy chọn)
+            setTimeout(() => {
+                if (!printWindow.closed) {
+                    printWindow.close();
+                }
+            }, 1000);
             
-            remainingHeight -= pageHeight;
-            currentHeight += pageHeight;
-            
-            if (remainingHeight > 0) {
-                pdf.addPage();
-            }
-        }
+            showToast("✅ PDF đã sẵn sàng để in!", "success");
+            hideLoading();
+        }, 500);
         
-        // Save PDF
-        const model = document.getElementById('model').value.replace(/\s+/g, '_') || 'Unknown';
-        const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10);
-        pdf.save(`NPI_Record_${model}_${date}.pdf`);
-        
-        showToast('✅ PDF đã được tạo thành công!', 'success');
-        
-    } catch (err) {
-        console.error('PDF generation error:', err);
-        showToast('❌ Có lỗi khi tạo PDF. Vui lòng thử lại!', 'error');
-    } finally {
-        // Restore button state
-        exportBtn.innerHTML = originalText;
-        exportBtn.disabled = false;
+    } catch (error) {
+        console.error("Lỗi xuất PDF:", error);
+        showToast("❌ Lỗi xuất PDF: " + error.message, "error");
         hideLoading();
     }
 }
-        // Hàm mới tạo nội dung PDF giống file mẫu
-// ========== HÀM MỚI TẠO NỘI DUNG PDF GIỐNG FILE MẪU (VỚI HIGHLIGHT) ==========
+
+// Hàm tạo nội dung PDF từ tất cả dữ liệu
+function createPDFContent(data, processes) {
+    // Hàm helper để highlight dữ liệu
+    function highlight(value) {
+        if (value && value.toString().trim() !== '') {
+            return `<span class="highlight">${value}</span>`;
+        }
+        return value || '';
+    }
+    
+    function highlightTextarea(value) {
+        if (value && value.trim() !== '') {
+            return `<div class="highlight highlight-box">${value.replace(/\n/g, '<br>')}</div>`;
+        }
+        return '';
+    }
+    
+    function highlightSelect(value) {
+        if (value && value !== '') {
+            return `<span class="highlight">${value}</span>`;
+        }
+        return '';
+    }
+    
+    // Format date
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getDate() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        } catch {
+            return dateStr;
+        }
+    }
+    
+    // Bắt đầu xây dựng nội dung
+    let content = `
+    <!-- Header -->
+    <div class="header">
+        <h1>BIỂU GHI NPI - NPI RECORD</h1>
+        <div style="font-size: 11pt; margin-top: 5px;">TNEMS-EN-F-048-NPI RECORD-VER03</div>
+    </div>
+    
+    <!-- Product Information -->
+    <div class="form-section">
+        <div class="section-title">THÔNG TIN SẢN PHẨM - PRODUCT INFORMATION</div>
+        
+        <table>
+            <tr>
+                <td width="25%" style="font-weight: bold;">MÃ HÀNG / MODEL:</td>
+                <td width="35%">${highlight(data.model)}</td>
+                <td width="20%" style="font-weight: bold;">Part No:</td>
+                <td width="20%">${highlight(data.partNo)}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">KHÁCH HÀNG / CUSTOMER:</td>
+                <td>${highlight(data.customer)}</td>
+                <td style="font-weight: bold;">Ngày / Date:</td>
+                <td>${highlight(formatDate(data.date))}</td>
+            </tr>
+        </table>
+        
+        <div style="margin-top: 10px;">
+            <span style="font-weight: bold;">Quy trình / Process:</span>
+            <div style="margin-top: 5px;">
+                ${processes.length > 0 ? highlight(processes.join(', ')) : ''}
+            </div>
+        </div>
+    </div>`;
+    
+    // SMT Process
+    if (processes.includes('SMT')) {
+        content += `
+        <div class="form-section">
+            <div class="section-title">SMT PROCESS</div>
+            
+            <!-- LASER MARKING -->
+            <div class="sub-section-title">LASER MARKING</div>
+            <table>
+                <tr>
+                    <th width="30%">NỘI DUNG</th>
+                    <th width="70%">GIÁ TRỊ</th>
+                </tr>
+                <tr>
+                    <td>Tên chương trình/ Program name</td>
+                    <td>${highlight(data.laserProgram)}</td>
+                </tr>
+                <tr>
+                    <td>Loại QR code/ QR code type</td>
+                    <td>${highlight(data.qrType)}</td>
+                </tr>
+                <tr>
+                    <td>Kích thước QR code/ QR code size</td>
+                    <td>${highlight(data.qrSize)}</td>
+                </tr>
+                <tr>
+                    <td>Cường độ khắc/ Engraving intensity</td>
+                    <td>${highlight(data.engravingIntensity)}</td>
+                </tr>
+                <tr>
+                    <td>Side BOT: Nội dung QR code/ QR code content</td>
+                    <td>${highlightTextarea(data.qrContentBot)}</td>
+                </tr>
+                <tr>
+                    <td>Side TOP: Nội dung QR code/ QR code content</td>
+                    <td>${highlightTextarea(data.qrContentTop)}</td>
+                </tr>
+                <tr>
+                    <td>Nội dung QR code khi quét bằng máy</td>
+                    <td>${highlightTextarea(data.qrScanContent)}</td>
+                </tr>
+            </table>
+            
+            <!-- PRINTER -->
+            <div class="sub-section-title">PRINTER</div>
+            <div style="padding: 5px;">
+                ${highlight(data.printerControl)}
+            </div>
+            
+            <!-- VISUAL INSPECTION 1 -->
+            <div class="sub-section-title">NGOẠI QUAN VISUAL INSPECTION</div>
+            <table>
+                <tr>
+                    <th width="40%">HƯỚNG LINH KIỆN/COMPONENT POLARITY</th>
+                    <th width="30%">SỐ LƯỢNG LINH KIỆN/COMPONENT QUANTITY</th>
+                    <th width="15%">KẾT QUẢ/RESULT</th>
+                    <th width="15%">XÁC NHẬN/VERIFY</th>
+                </tr>
+                <tr>
+                    <td>Theo bảng hướng linh kiện đính kèm (QC)</td>
+                    <td>
+                        <div>Theo BOM/ According to the BOM: ${highlight(data.bomQty)}</div>
+                        <div style="margin-top: 5px;">Thực tế/ Reality: ${highlight(data.actualQty)}</div>
+                    </td>
+                    <td style="text-align: center;">${highlightSelect(data.visualResult1)}</td>
+                    <td style="text-align: center;">
+                        <div>ENG: ${highlight(data.engVerify1)}</div>
+                        <div style="margin-top: 2px;">QC: ${highlight(data.qcVerify1)}</div>
+                    </td>
+                </tr>
+            </table>
+            
+            <!-- REFLOW OVEN -->
+            <div class="sub-section-title">LÒ REFLOW/REFLOW OVEN</div>
+            <table>
+                <tr>
+                    <th width="30%">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
+                    <th width="40%">THÔNG SỐ CÀI ĐẶT MÁY/MACHINE PARAMETERS SETTING</th>
+                    <th width="15%">KẾT QUẢ/RESULT</th>
+                    <th width="15%">XÁC NHẬN/VERIFY</th>
+                </tr>
+                <tr>
+                    <td>- Theo Process control sheet đính kèm<br>- Profile lò đính kèm</td>
+                    <td>${highlightTextarea(data.reflowParams)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.reflowResult)}</td>
+                    <td style="text-align: center;">
+                        <div>ENG: ${highlight(data.reflowEng)}</div>
+                        <div style="margin-top: 2px;">QC: ${highlight(data.reflowQc)}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>`;
+    }
+    
+    // Through-Hole Process
+    if (processes.includes('THROUGH HOLE')) {
+        content += `
+        <div class="form-section">
+            <div class="section-title">THROUGH-HOLE PROCESS</div>
+            
+            <!-- Component Quantity Check -->
+            <div class="sub-section-title">KIỂM TRA SỐ LƯỢNG LINH KIỆN / COMPONENT QUANTITY CHECK</div>
+            <table>
+                <tr>
+                    <th width="40%">NỘI DUNG KIỂM TRA/INSPECTION CONTENT</th>
+                    <th width="30%">GIÁ TRỊ/VALUE</th>
+                    <th width="15%">KẾT QUẢ/RESULT</th>
+                    <th width="15%">XÁC NHẬN/VERIFY</th>
+                </tr>
+                <tr>
+                    <td>ĐÚNG MÃ / CORRECT PART NUMBER</td>
+                    <td>${highlight(data.thPartNumber)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.thPartNumberResult)}</td>
+                    <td style="text-align: center;">
+                        <div>ENG: ${highlight(data.thQuantityEng)}</div>
+                        <div style="margin-top: 2px;">QC: ${highlight(data.thQuantityQc)}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>SỐ LƯỢNG / QUANTITY</td>
+                    <td>${highlight(data.thQuantity)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.thQuantityResult)}</td>
+                    <td style="text-align: center;">
+                        <div>ENG: ${highlight(data.thQuantityEng2)}</div>
+                        <div style="margin-top: 2px;">QC: ${highlight(data.thQuantityQc2)}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>`;
+    }
+    
+    // Coating Process
+    if (processes.includes('COATING')) {
+        content += `
+        <div class="form-section">
+            <div class="section-title">COATING PROCESS</div>
+            
+            <div class="sub-section-title">COATING</div>
+            <table>
+                <tr>
+                    <th width="40%">THÔNG SỐ / PARAMETERS</th>
+                    <th width="40%">GIÁ TRỊ / VALUE</th>
+                    <th width="10%">KẾT QUẢ / RESULT</th>
+                    <th width="10%">XÁC NHẬN / VERIFY</th>
+                </tr>
+                <tr>
+                    <td>- Dung dịch coating/ Coating solution:</td>
+                    <td>${highlight(data.coatingSolution)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.coatingSolutionResult)}</td>
+                    <td rowspan="5" style="text-align: center; vertical-align: middle;">
+                        <div>ENG: ${highlight(data.coatingEng)}</div>
+                        <div style="margin-top: 10px;">QC: ${highlight(data.coatingQc)}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>- Phương pháp coating/ Coating method:</td>
+                    <td>${highlight(data.coatingMethod)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.coatingMethodResult)}</td>
+                </tr>
+                <tr>
+                    <td>- Phương pháp sấy/ Drying method:</td>
+                    <td>${highlight(data.dryingMethod)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.dryingMethodResult)}</td>
+                </tr>
+                <tr>
+                    <td>- Nhiệt độ sấy/ Drying temperature:</td>
+                    <td>${highlight(data.dryingTemp)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.dryingTempResult)}</td>
+                </tr>
+                <tr>
+                    <td>- Thời gian sấy/ Drying time:</td>
+                    <td>${highlight(data.dryingTime)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.dryingTimeResult)}</td>
+                </tr>
+            </table>
+        </div>`;
+    }
+    
+    // Boxbuild Process
+    if (processes.includes('BOXBUILD')) {
+        content += `
+        <div class="form-section">
+            <div class="section-title">LẮP RÁP / BOXBUILD PROCESS</div>
+            
+            <!-- Assembly Jig/Tool -->
+            <div class="sub-section-title">LẮP RÁP BOXBUILD</div>
+            <table>
+                <tr>
+                    <th width="40%">JIG/DỤNG CỤ LẮP RÁP / ASSEMBLY JIG OR TOOL</th>
+                    <th width="30%">TIÊU CHUẨN / SPECIFICATION</th>
+                    <th width="15%">KẾT QUẢ / RESULT</th>
+                    <th width="15%">XÁC NHẬN / VERIFY</th>
+                </tr>
+                <tr>
+                    <td>${highlight(data.assemblyJig)}</td>
+                    <td>${highlight(data.assemblySpec)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.assemblyJigResult)}</td>
+                    <td style="text-align: center;">
+                        <div>ENG: ${highlight(data.assemblyJigEng)}</div>
+                        <div style="margin-top: 2px;">QC: ${highlight(data.assemblyJigQc)}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>`;
+    }
+    
+    // Packaging Process
+    if (processes.includes('PACKING')) {
+        content += `
+        <div class="form-section">
+            <div class="section-title">ĐÓNG GÓI / PACKAGING PROCESS</div>
+            
+            <!-- Packaging -->
+            <div class="sub-section-title">ĐÓNG GÓI / PACKAGING</div>
+            <table>
+                <tr>
+                    <th width="30%">VẬT LIỆU ĐÓNG GÓI / PACKAGING MATERIAL</th>
+                    <th width="30%">PHƯƠNG PHÁP ĐÓNG GÓI / PACKAGING METHOD</th>
+                    <th width="20%">SỐ LƯỢNG/THÙNG / QUANTITY PER BOX</th>
+                    <th width="10%">KẾT QUẢ / RESULT</th>
+                    <th width="10%">XÁC NHẬN / VERIFY</th>
+                </tr>
+                <tr>
+                    <td>
+                        <div>- Theo BOM Đính kèm/ Attached BOM</div>
+                        <div>- Bổ sung (nếu có)/ Additional (if any): ${highlight(data.packagingMaterial)}</div>
+                    </td>
+                    <td>${highlight(data.packagingMethod)}</td>
+                    <td>${highlight(data.packagingQty)}</td>
+                    <td style="text-align: center;">${highlightSelect(data.packagingResult)}</td>
+                    <td style="text-align: center;">
+                        <div>ENG: ${highlight(data.packagingEng)}</div>
+                        <div style="margin-top: 2px;">QC: ${highlight(data.packagingQc)}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>`;
+    }
+    
+    // Conclusion Section (Luôn hiển thị)
+    content += `
+    <div class="form-section">
+        <div class="section-title">KẾT LUẬN / CONCLUSION</div>
+        
+        <table>
+            <tr>
+                <th width="20%">KẾT QUẢ CUỐI CÙNG / FINAL RESULT</th>
+                <th width="25%">RỦI RO TRONG CÁC CÔNG ĐOẠN / RISKS IN EACH PROCESS STEP</th>
+                <th width="25%">BÀI HỌC TỪNG CÔNG ĐOẠN / LESSONS LEARNED FROM EACH PROCESS STEP</th>
+                <th width="30%">CẢI TIẾN CÔNG ĐOẠN / PROCESS IMPROVEMENT</th>
+            </tr>
+            <tr>
+                <td style="text-align: center; vertical-align: middle;">
+                    ${highlightSelect(data.finalResult)}
+                </td>
+                <td style="min-height: 100px;">${highlightTextarea(data.processRisks)}</td>
+                <td style="min-height: 100px;">${highlightTextarea(data.lessonsLearned)}</td>
+                <td style="min-height: 100px;">${highlightTextarea(data.processImprovement)}</td>
+            </tr>
+        </table>
+        
+        <div style="margin-top: 15px;">
+            <table style="width: 100%; border: none;">
+                <tr>
+                    <td width="25%" style="border: none; padding: 4px;">
+                        <div><strong>Tổng số lượng (PCBA):</strong></div>
+                        <div><strong>Total qty (PCBA):</strong></div>
+                        <div style="margin-top: 5px; font-size: 11pt;">
+                            ${data.totalQty ? highlight(data.totalQty) : '0'}
+                        </div>
+                    </td>
+                    <td width="20%" style="border: none; padding: 4px;">
+                        <div><strong>OK :</strong></div>
+                        <div style="margin-top: 5px; font-size: 11pt;">
+                            ${data.okQty ? highlight(data.okQty) : '0'}
+                        </div>
+                    </td>
+                    <td width="20%" style="border: none; padding: 4px;">
+                        <div><strong>NG (scrap) :</strong></div>
+                        <div style="margin-top: 5px; font-size: 11pt;">
+                            ${data.ngQty ? highlight(data.ngQty) : '0'}
+                        </div>
+                    </td>
+                    <td width="35%" style="border: none; padding: 4px;">
+                        <div><strong>Tỷ lệ lỗi/ Defect rate (%) :</strong></div>
+                        <div><strong>(NG/Total)</strong></div>
+                        <div style="margin-top: 5px; font-size: 11pt;">
+                            ${data.defectRate ? highlight(data.defectRate) : '0%'}
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="margin-top: 10px;">
+            <div><strong>Mô tả chi tiết lỗi / detailed defect description:</strong></div>
+            <div style="margin-top: 5px; min-height: 50px;">
+                ${highlightTextarea(data.defectDescription)}
+            </div>
+        </div>
+        
+        <!-- Electronic Signatures -->
+        <div style="margin-top: 20px;">
+            <div class="sub-section-title">XÁC NHẬN ĐIỆN TỬ - ELECTRONIC SIGNATURES</div>
+            
+            <div style="display: flex; gap: 30px; margin-top: 10px;">
+                <div style="flex: 1;">
+                    <div><strong>Ký xác nhận của Kỹ sư / Engineer Signature:</strong></div>
+                    <div class="signature-container">
+                        ${data._engineerSignature ? `<img src="${data._engineerSignature}" alt="Engineer Signature" class="signature-img">` : ''}
+                    </div>
+                    <div style="margin-top: 5px;">
+                        <strong>Tên Kỹ sư / Engineer Name:</strong> 
+                        ${highlight(data.engineerName)}
+                    </div>
+                </div>
+                
+                <div style="flex: 1;">
+                    <div><strong>Ký xác nhận của QC / QC Signature:</strong></div>
+                    <div class="signature-container">
+                        ${data._qcSignature ? `<img src="${data._qcSignature}" alt="QC Signature" class="signature-img">` : ''}
+                    </div>
+                    <div style="margin-top: 5px;">
+                        <strong>Tên QC / QC Name:</strong> 
+                        ${highlight(data.qcName)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 20px; color: #666; font-size: 9pt; padding-top: 15px; border-top: 1px solid #ddd;">
+        <p>NPI Record - Phiên bản Multi-User Real-time</p>
+        <p>© 2024 - Đồng bộ thời gian thực với Firebase</p>
+        <p>Generated: ${new Date().toLocaleString('vi-VN')}</p>
+    </div>`;
+    
+    return content;
+}
+
+// Thêm vào cuối file script
+console.log("📄 Hàm exportToPDF đã được cập nhật để xuất tất cả các tab");
+
+// Test function để kiểm tra
+function testExport() {
+    const allData = collectFormData();
+    console.log("Dữ liệu đã thu thập:", allData);
+    console.log("Số lượng field:", Object.keys(allData).length);
+    
+    // Kiểm tra xem có process nào được chọn không
+    const processes = [];
+    if (allData.processSMT) processes.push('SMT');
+    if (allData.processThroughHole) processes.push('THROUGH HOLE');
+    if (allData.processCoating) processes.push('COATING');
+    if (allData.processBoxbuild) processes.push('BOXBUILD');
+    if (allData.processPacking) processes.push('PACKING');
+    console.log("Processes selected:", processes);
+}
+        // ========== HÀM MỚI TẠO NỘI DUNG PDF GIỐNG FILE MẪU (ĐẦY ĐỦ) ==========
 function generatePDFContentNew() {
     // Lấy giá trị từ form
     const model = document.getElementById('model').value || '';
@@ -2260,98 +3270,10 @@ function generatePDFContentNew() {
     if (document.getElementById('processPacking').checked) processes.push('PACKING');
     const processText = processes.join(', ');
     
-    // Hàm kiểm tra và highlight nếu có dữ liệu
-    function highlightIfHasData(value, isCheckbox = false) {
-        if (isCheckbox) {
-            return value ? `<span style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 1px 3px; border-radius: 2px;">${value}</span>` : value;
-        }
-        return value ? `<span style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 1px 3px; border-radius: 2px;">${value}</span>` : '';
-    }
-    
-    // Laser Marking
-    const laserProgram = document.getElementById('laserProgram').value || '';
-    const qrType = document.getElementById('qrType').value || '';
-    const qrSize = document.getElementById('qrSize').value || '';
-    const engravingIntensity = document.getElementById('engravingIntensity').value || '';
-    const qrContentBot = document.getElementById('qrContentBot').value || '';
-    const qrContentTop = document.getElementById('qrContentTop').value || '';
-    const qrScanContent = document.getElementById('qrScanContent').value || '';
-    
-    // Printer & Mounter
-    const printerControl = document.getElementById('printerControl').value || 'Theo Process control sheet đính kèm/According to the attached Process Control Sheet';
-    const mounterControl = document.getElementById('mounterControl').value || 'Theo Process control sheet đính kèm (có xác nhận và đo giá trị của các bên)/According to the attached Process Control Sheet';
-    
-    // Visual Inspection 1
-    const bomQty = document.getElementById('bomQty').value || '';
-    const actualQty = document.getElementById('actualQty').value || '';
-    const visualResult1 = document.getElementById('visualResult1').value || '';
-    const engVerify1 = document.getElementById('engVerify1').value || '';
-    const qcVerify1 = document.getElementById('qcVerify1').value || '';
-    
-    // Reflow Oven
-    const reflowParams = document.getElementById('reflowParams').value || '';
-    const reflowResult = document.getElementById('reflowResult').value || '';
-    const reflowEng = document.getElementById('reflowEng').value || '';
-    const reflowQc = document.getElementById('reflowQc').value || '';
-    
-    // AOI
-    const aoiProgramBot = document.getElementById('aoiProgramBot').value || '';
-    const aoiProgramTop = document.getElementById('aoiProgramTop').value || '';
-    const aoiQty = document.getElementById('aoiQty').value || '';
-    const aoiResult = document.getElementById('aoiResult').value || '';
-    const aoiEng = document.getElementById('aoiEng').value || '';
-    const aoiQc = document.getElementById('aoiQc').value || '';
-    
-    // Flying Probe
-    const probeProgramBot = document.getElementById('probeProgramBot').value || '';
-    const probeProgramTop = document.getElementById('probeProgramTop').value || '';
-    const probeQty = document.getElementById('probeQty').value || '';
-    const probeResult = document.getElementById('probeResult').value || '';
-    const probeEng = document.getElementById('probeEng').value || '';
-    const probeQc = document.getElementById('probeQc').value || '';
-    
-    // Visual Inspection 2
-    const visual2Result1 = document.getElementById('visual2Result1').value || '';
-    const visual2Result2 = document.getElementById('visual2Result2').value || '';
-    const visual2Result3 = document.getElementById('visual2Result3').value || '';
-    const visual2Result4 = document.getElementById('visual2Result4').value || '';
-    const visual2Eng = document.getElementById('visual2Eng').value || '';
-    const visual2Qc = document.getElementById('visual2Qc').value || '';
-    
-    // Through-Hole
-    const solderTemp = document.getElementById('solderTemp').value || '';
-    const solderResult = document.getElementById('solderResult').value || '';
-    const solderEng = document.getElementById('solderEng').value || '';
-    const solderQc = document.getElementById('solderQc').value || '';
-    
-    const thVisual1 = document.getElementById('thVisual1').value || '';
-    const thVisual2 = document.getElementById('thVisual2').value || '';
-    const thVisual3 = document.getElementById('thVisual3').value || '';
-    const thEng = document.getElementById('thEng').value || '';
-    const thQc = document.getElementById('thQc').value || '';
-    
-    // Conclusion
-    const finalResult = document.getElementById('finalResult').value || '';
-    const processRisks = document.getElementById('processRisks').value || '';
-    const lessonsLearned = document.getElementById('lessonsLearned').value || '';
-    const processImprovement = document.getElementById('processImprovement').value || '';
-    
-    const totalQty = document.getElementById('totalQty').value || '0';
-    const okQty = document.getElementById('okQty').value || '0';
-    const ngQty = document.getElementById('ngQty').value || '0';
-    const defectRate = document.getElementById('defectRate').value || '0%';
-    const defectDescription = document.getElementById('defectDescription').value || '';
-    
-    // Signatures
-    const engineerName = document.getElementById('engineerName').value || '';
-    const qcName = document.getElementById('qcName').value || '';
-    const engineerSignature = localStorage.getItem('engineer_signature');
-    const qcSignature = localStorage.getItem('qc_signature');
-    
     // Hàm tạo text với highlight
     function createHighlightedText(value, highlightCondition = true) {
         if (value && highlightCondition) {
-            return `<span class="highlighted-value" style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 1px 4px; border-radius: 2px; display: inline-block; margin: 1px 0;">${value}</span>`;
+            return `<span style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 1px 4px; border-radius: 2px; display: inline-block; margin: 1px 0;">${value}</span>`;
         }
         return value || '';
     }
@@ -2359,7 +3281,7 @@ function generatePDFContentNew() {
     // Hàm tạo textarea với highlight
     function createHighlightedTextarea(value) {
         if (value) {
-            return `<div style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 4px 6px; border-radius: 3px; border-left: 3px solid #1565C0;">${value}</div>`;
+            return `<div style="color: #1565C0; font-weight: 600; background-color: #E3F2FD; padding: 4px 6px; border-radius: 3px; border-left: 3px solid #1565C0; white-space: pre-wrap;">${value}</div>`;
         }
         return '';
     }
@@ -2372,8 +3294,142 @@ function generatePDFContentNew() {
         return '';
     }
     
-    // Tạo nội dung PDF với cấu trúc giống file mẫu và có highlight
-    return `
+    // Lấy tất cả giá trị từ các phần
+    // SMT Process
+    const laserProgram = document.getElementById('laserProgram').value || '';
+    const qrType = document.getElementById('qrType').value || '';
+    const qrSize = document.getElementById('qrSize').value || '';
+    const engravingIntensity = document.getElementById('engravingIntensity').value || '';
+    const qrContentBot = document.getElementById('qrContentBot').value || '';
+    const qrContentTop = document.getElementById('qrContentTop').value || '';
+    const qrScanContent = document.getElementById('qrScanContent').value || '';
+    const printerControl = document.getElementById('printerControl').value || '';
+    const mounterControl = document.getElementById('mounterControl').value || '';
+    const bomQty = document.getElementById('bomQty').value || '';
+    const actualQty = document.getElementById('actualQty').value || '';
+    const visualResult1 = document.getElementById('visualResult1').value || '';
+    const engVerify1 = document.getElementById('engVerify1').value || '';
+    const qcVerify1 = document.getElementById('qcVerify1').value || '';
+    const reflowParams = document.getElementById('reflowParams').value || '';
+    const reflowResult = document.getElementById('reflowResult').value || '';
+    const reflowEng = document.getElementById('reflowEng').value || '';
+    const reflowQc = document.getElementById('reflowQc').value || '';
+    const aoiProgramBot = document.getElementById('aoiProgramBot').value || '';
+    const aoiProgramTop = document.getElementById('aoiProgramTop').value || '';
+    const aoiQty = document.getElementById('aoiQty').value || '';
+    const aoiResult = document.getElementById('aoiResult').value || '';
+    const aoiEng = document.getElementById('aoiEng').value || '';
+    const aoiQc = document.getElementById('aoiQc').value || '';
+    const probeProgramBot = document.getElementById('probeProgramBot').value || '';
+    const probeProgramTop = document.getElementById('probeProgramTop').value || '';
+    const probeQty = document.getElementById('probeQty').value || '';
+    const probeResult = document.getElementById('probeResult').value || '';
+    const probeEng = document.getElementById('probeEng').value || '';
+    const probeQc = document.getElementById('probeQc').value || '';
+    const visual2Result1 = document.getElementById('visual2Result1').value || '';
+    const visual2Result2 = document.getElementById('visual2Result2').value || '';
+    const visual2Result3 = document.getElementById('visual2Result3').value || '';
+    const visual2Result4 = document.getElementById('visual2Result4').value || '';
+    const visual2Eng = document.getElementById('visual2Eng').value || '';
+    const visual2Qc = document.getElementById('visual2Qc').value || '';
+    
+    // Through-Hole Process
+    const thPartNumber = document.getElementById('thPartNumber').value || '';
+    const thPartNumberResult = document.getElementById('thPartNumberResult').value || '';
+    const thQuantity = document.getElementById('thQuantity').value || '';
+    const thQuantityResult = document.getElementById('thQuantityResult').value || '';
+    const thQuantityEng = document.getElementById('thQuantityEng').value || '';
+    const thQuantityQc = document.getElementById('thQuantityQc').value || '';
+    const handSolderTemp = document.getElementById('handSolderTemp').value || '';
+    const handSolderResult = document.getElementById('handSolderResult').value || '';
+    const nozzleType = document.getElementById('nozzleType').value || '';
+    const nozzleResult = document.getElementById('nozzleResult').value || '';
+    const solderParams = document.getElementById('solderParams').value || '';
+    const solderParamsResult = document.getElementById('solderParamsResult').value || '';
+    const thSolderingEng = document.getElementById('thSolderingEng').value || '';
+    const thSolderingQc = document.getElementById('thSolderingQc').value || '';
+    const testingResult = document.getElementById('testingResult').value || '';
+    const thTestingEng = document.getElementById('thTestingEng').value || '';
+    const thTestingQc = document.getElementById('thTestingQc').value || '';
+    const cleaningMethod = document.getElementById('cleaningMethod').value || '';
+    const cleaningTools = document.getElementById('cleaningTools').value || '';
+    const cleaningResult = document.getElementById('cleaningResult').value || '';
+    const thCleaningEng = document.getElementById('thCleaningEng').value || '';
+    const thCleaningQc = document.getElementById('thCleaningQc').value || '';
+    const thVisualQuality = document.getElementById('thVisualQuality').value || '';
+    const thVisualComponents = document.getElementById('thVisualComponents').value || '';
+    const thVisualResult = document.getElementById('thVisualResult').value || '';
+    const thVisualEng = document.getElementById('thVisualEng').value || '';
+    const thVisualQc = document.getElementById('thVisualQc').value || '';
+    
+    // Coating Process
+    const coatingSolution = document.getElementById('coatingSolution').value || '';
+    const coatingSolutionResult = document.getElementById('coatingSolutionResult').value || '';
+    const coatingMethod = document.getElementById('coatingMethod').value || '';
+    const coatingMethodResult = document.getElementById('coatingMethodResult').value || '';
+    const dryingMethod = document.getElementById('dryingMethod').value || '';
+    const dryingMethodResult = document.getElementById('dryingMethodResult').value || '';
+    const dryingTemp = document.getElementById('dryingTemp').value || '';
+    const dryingTempResult = document.getElementById('dryingTempResult').value || '';
+    const dryingTime = document.getElementById('dryingTime').value || '';
+    const dryingTimeResult = document.getElementById('dryingTimeResult').value || '';
+    const coatingEng = document.getElementById('coatingEng').value || '';
+    const coatingQc = document.getElementById('coatingQc').value || '';
+    
+    // Boxbuild Process
+    const assemblyJig = document.getElementById('assemblyJig').value || '';
+    const assemblySpec = document.getElementById('assemblySpec').value || '';
+    const assemblyJigResult = document.getElementById('assemblyJigResult').value || '';
+    const assemblyJigEng = document.getElementById('assemblyJigEng').value || '';
+    const assemblyJigQc = document.getElementById('assemblyJigQc').value || '';
+    const assemblyQty = document.getElementById('assemblyQty').value || '';
+    const assemblyQtyResult = document.getElementById('assemblyQtyResult').value || '';
+    const assemblyQtyEng = document.getElementById('assemblyQtyEng').value || '';
+    const assemblyQtyQc = document.getElementById('assemblyQtyQc').value || '';
+    const labelPosition = document.getElementById('labelPosition').value || '';
+    const labelOrientation = document.getElementById('labelOrientation').value || '';
+    const labelContent = document.getElementById('labelContent').value || '';
+    const labelResult = document.getElementById('labelResult').value || '';
+    const labelEng = document.getElementById('labelEng').value || '';
+    const labelQc = document.getElementById('labelQc').value || '';
+    const boxInspectionReq = document.getElementById('boxInspectionReq').value || '';
+    const boxInspectionDesc = document.getElementById('boxInspectionDesc').value || '';
+    const boxInspectionResult = document.getElementById('boxInspectionResult').value || '';
+    const boxInspectionEng = document.getElementById('boxInspectionEng').value || '';
+    const boxInspectionQc = document.getElementById('boxInspectionQc').value || '';
+    
+    // Packaging Process
+    const packagingMaterial = document.getElementById('packagingMaterial').value || '';
+    const packagingMethod = document.getElementById('packagingMethod').value || '';
+    const packagingQty = document.getElementById('packagingQty').value || '';
+    const packagingResult = document.getElementById('packagingResult').value || '';
+    const packagingEng = document.getElementById('packagingEng').value || '';
+    const packagingQc = document.getElementById('packagingQc').value || '';
+    const packLabelContent = document.getElementById('packLabelContent').value || '';
+    const packLabelImage = document.getElementById('packLabelImage').value || '';
+    const packLabelResult = document.getElementById('packLabelResult').value || '';
+    const packLabelEng = document.getElementById('packLabelEng').value || '';
+    const packLabelQc = document.getElementById('packLabelQc').value || '';
+    
+    // Conclusion
+    const finalResult = document.getElementById('finalResult').value || '';
+    const processRisks = document.getElementById('processRisks').value || '';
+    const lessonsLearned = document.getElementById('lessonsLearned').value || '';
+    const processImprovement = document.getElementById('processImprovement').value || '';
+    const totalQty = document.getElementById('totalQty').value || '0';
+    const okQty = document.getElementById('okQty').value || '0';
+    const ngQty = document.getElementById('ngQty').value || '0';
+    const defectRate = document.getElementById('defectRate').value || '0%';
+    const defectDescription = document.getElementById('defectDescription').value || '';
+    
+    // Signatures
+    const engineerName = document.getElementById('engineerName').value || '';
+    const qcName = document.getElementById('qcName').value || '';
+    const engineerSignature = localStorage.getItem('engineer_signature');
+    const qcSignature = localStorage.getItem('qc_signature');
+    
+    // Tạo nội dung PDF đầy đủ
+    let pdfContent = `
         <div style="width: 100%; font-family: 'Arial', sans-serif; font-size: 10pt; line-height: 1.2; box-sizing: border-box;">
             <!-- Header -->
             <div style="text-align: center; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 5px;">
@@ -2416,15 +3472,18 @@ function generatePDFContentNew() {
                         ${processText ? createHighlightedText(processText, processText !== '') : ''}
                     </div>
                 </div>
-            </div>
-            
+            </div>`;
+    
+    // SMT Process Section
+    if (processes.includes('SMT')) {
+        pdfContent += `
             <!-- SMT Process -->
             <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
                 <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
                     SMT PROCESS
                 </div>
                 
-                <!-- Laser Marking -->
+                <!-- LASER MARKING -->
                 <div style="margin-top: 10px;">
                     <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
                         LASER MARKING
@@ -2480,27 +3539,27 @@ function generatePDFContentNew() {
                     </table>
                 </div>
                 
-                <!-- Printer -->
+                <!-- PRINTER -->
                 <div style="margin-top: 15px;">
                     <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
                         PRINTER
                     </div>
                     <div style="padding: 5px;">
-                        ${printerControl ? createHighlightedText(printerControl, printerControl !== 'Theo Process control sheet đính kèm/According to the attached Process Control Sheet') : ''}
+                        ${printerControl ? createHighlightedText(printerControl) : ''}
                     </div>
                 </div>
                 
-                <!-- Mounter -->
+                <!-- MOUNTER -->
                 <div style="margin-top: 15px;">
                     <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
                         MOUNTER
                     </div>
                     <div style="padding: 5px;">
-                        ${mounterControl ? createHighlightedText(mounterControl, mounterControl !== 'Theo Process control sheet đính kèm (có xác nhận và đo giá trị của các bên)/According to the attached Process Control Sheet') : ''}
+                        ${mounterControl ? createHighlightedText(mounterControl) : ''}
                     </div>
                 </div>
                 
-                <!-- Visual Inspection 1 -->
+                <!-- VISUAL INSPECTION 1 -->
                 <div style="margin-top: 15px;">
                     <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
                         NGOẠI QUAN VISUAL INSPECTION
@@ -2533,38 +3592,38 @@ function generatePDFContentNew() {
                         </tr>
                     </table>
                 </div>
-            </div>
-            
-            <!-- Reflow Oven -->
-            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
-                <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
-                    LÒ REFLOW/REFLOW OVEN
-                </div>
                 
-                <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
-                    <tr>
-                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
-                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">THÔNG SỐ CÀI ĐẶT MÁY/MACHINE PARAMETERS SETTING</th>
-                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ/RESULT</th>
-                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN/VERIFY</th>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 4px;">
-                            - Theo Process control sheet đính kèm<br>
-                            - Profile lò đính kèm
-                        </td>
-                        <td style="border: 1px solid #000; padding: 4px; min-height: 40px;">
-                            ${reflowParams ? createHighlightedTextarea(reflowParams) : ''}
-                        </td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">
-                            ${reflowResult ? createHighlightedSelect(reflowResult) : ''}
-                        </td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">
-                            <div>ENG: ${createHighlightedText(reflowEng, reflowEng !== '')}</div>
-                            <div style="margin-top: 2px;">QC: ${createHighlightedText(reflowQc, reflowQc !== '')}</div>
-                        </td>
-                    </tr>
-                </table>
+                <!-- REFLOW OVEN -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        LÒ REFLOW/REFLOW OVEN
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">TÊN CHƯƠNG TRÌNH/PROGRAM NAME</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">THÔNG SỐ CÀI ĐẶT MÁY/MACHINE PARAMETERS SETTING</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ/RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN/VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                - Theo Process control sheet đính kèm<br>
+                                - Profile lò đính kèm
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; min-height: 40px;">
+                                ${reflowParams ? createHighlightedTextarea(reflowParams) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${reflowResult ? createHighlightedSelect(reflowResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(reflowEng, reflowEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(reflowQc, reflowQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
                 
                 <!-- AOI -->
                 <div style="margin-top: 15px;">
@@ -2598,7 +3657,7 @@ function generatePDFContentNew() {
                     </table>
                 </div>
                 
-                <!-- Flying Probe -->
+                <!-- FLYING PROBE -->
                 <div style="margin-top: 15px;">
                     <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
                         FLYING PROBE (20%)
@@ -2630,7 +3689,7 @@ function generatePDFContentNew() {
                     </table>
                 </div>
                 
-                <!-- Visual Inspection 2 -->
+                <!-- VISUAL INSPECTION 2 -->
                 <div style="margin-top: 15px;">
                     <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
                         NGOẠI QUAN VISUAL INSPECTION
@@ -2675,38 +3734,160 @@ function generatePDFContentNew() {
                         </tr>
                     </table>
                 </div>
-            </div>
-            
-            <!-- Through-Hole Process -->
+            </div>`;
+    }
+    
+    // Through-Hole Process Section
+    if (processes.includes('THROUGH HOLE')) {
+        pdfContent += `
+            <!-- THROUGH-HOLE Process -->
             <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
                 <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
                     THROUGH-HOLE PROCESS
                 </div>
                 
-                <!-- Hand Soldering -->
+                <!-- Component Quantity Check -->
                 <div style="margin-top: 10px;">
                     <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
-                        QUY TRÌNH HÀN TAY/HAND SOLDERING PROCESS
+                        KIỂM TRA SỐ LƯỢNG LINH KIỆN / COMPONENT QUANTITY CHECK
                     </div>
                     
                     <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
                         <tr>
-                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">THÔNG SỐ/ PARAMETERS</th>
-                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">GIÁ TRỊ/ VALUE</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">NỘI DUNG KIỂM TRA/INSPECTION CONTENT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">GIÁ TRỊ/VALUE</th>
                             <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ/RESULT</th>
                             <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN/VERIFY</th>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #000; padding: 4px;">Nhiệt độ mỏ hàn/ Soldering iron temperature</td>
+                            <td style="border: 1px solid #000; padding: 4px;">ĐÚNG MÃ / CORRECT PART NUMBER</td>
                             <td style="border: 1px solid #000; padding: 4px;">
-                                ${createHighlightedText(solderTemp, solderTemp !== '')}
+                                ${createHighlightedText(thPartNumber, thPartNumber !== '')}
                             </td>
                             <td style="border: 1px solid #000; padding: 4px; text-align: center;">
-                                ${solderResult ? createHighlightedSelect(solderResult) : ''}
+                                ${thPartNumberResult ? createHighlightedSelect(thPartNumberResult) : ''}
                             </td>
                             <td style="border: 1px solid #000; padding: 4px; text-align: center;">
-                                <div>ENG: ${createHighlightedText(solderEng, solderEng !== '')}</div>
-                                <div style="margin-top: 2px;">QC: ${createHighlightedText(solderQc, solderQc !== '')}</div>
+                                <div>ENG: ${createHighlightedText(thQuantityEng, thQuantityEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(thQuantityQc, thQuantityQc !== '')}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">SỐ LƯỢNG / QUANTITY</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(thQuantity, thQuantity !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${thQuantityResult ? createHighlightedSelect(thQuantityResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(thQuantityEng, thQuantityEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(thQuantityQc, thQuantityQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Soldering -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        HÀN / SOLDERING
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">THÔNG SỐ / PARAMETERS</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">GIÁ TRỊ / VALUE</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">NHIỆT ĐỘ CÀI ĐẶT HÀN TAY / HAND SOLDERING TEMPERATURE SETTING</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(handSolderTemp, handSolderTemp !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${handSolderResult ? createHighlightedSelect(handSolderResult) : ''}
+                            </td>
+                            <td rowspan="3" style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">
+                                <div>ENG: ${createHighlightedText(thSolderingEng, thSolderingEng !== '')}</div>
+                                <div style="margin-top: 10px;">QC: ${createHighlightedText(thSolderingQc, thSolderingQc !== '')}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Loại nozzle/Nozzle type:</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(nozzleType, nozzleType !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${nozzleResult ? createHighlightedSelect(nozzleResult) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Preheat (ºC): Solder pot (ºC): Thời gian preheat (s)</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(solderParams, solderParams !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${solderParamsResult ? createHighlightedSelect(solderParamsResult) : ''}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Testing -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        TESTING
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">GIÁ TRỊ KIỂM TRA / INSPECTION VALUE</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">CÁC BƯỚC KIỂM TRA / INSPECTION STEPS</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">Xem file đính kèm Test đính kèm / See attached file</td>
+                            <td style="border: 1px solid #000; padding: 4px;">Xem file đính kèm Test đính kèm / See attached file</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${testingResult ? createHighlightedSelect(testingResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(thTestingEng, thTestingEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(thTestingQc, thTestingQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- PCBA Cleaning -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        VỆ SINH PCBA / PCBA CLEANING
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">PHƯƠNG PHÁP VỆ SINH / CLEANING METHOD</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">DỤNG CỤ & DUNG DỊCH / TOOLS & SOLUTION</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(cleaningMethod, cleaningMethod !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(cleaningTools, cleaningTools !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${cleaningResult ? createHighlightedSelect(cleaningResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(thCleaningEng, thCleaningEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(thCleaningQc, thCleaningQc !== '')}</div>
                             </td>
                         </tr>
                     </table>
@@ -2715,56 +3896,344 @@ function generatePDFContentNew() {
                 <!-- Visual Inspection -->
                 <div style="margin-top: 15px;">
                     <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
-                        VISUAL INSPECTION
-                    </div>
-                    <div style="font-size: 8pt; color: #666; margin: 5px 0; font-style: italic;">
-                        KIỂM TRA CHẤT LƯỢNG MỐI HÀN THEO TIÊU CHUẨN IPC
+                        NGOẠI QUAN VISUAL INSPECTION
                     </div>
                     
                     <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
                         <tr>
-                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">TIÊU CHÍ/ CRITERIA</th>
-                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">KẾT QUẢ/ RESULT</th>
-                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">XÁC NHẬN/ VERIFY</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">CHẤT LƯỢNG MỐI HÀN VÀ VỆ SINH / SOLDER JOINT QUALITY AND CLEANLINESS</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">ĐÚNG, ĐỦ LINH KIỆN / CORRECT AND COMPLETE COMPONENTS</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN / VERIFY</th>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #000; padding: 4px;">- Chất lượng mối hàn/ Solder joint quality</td>
-                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
-                                ${thVisual1 ? createHighlightedSelect(thVisual1) : ''}
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(thVisualQuality, thVisualQuality !== '')}
                             </td>
-                            <td rowspan="3" style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">
-                                <div>ENG: ${createHighlightedText(thEng, thEng !== '')}</div>
-                                <div style="margin-top: 10px;">QC: ${createHighlightedText(thQc, thQc !== '')}</div>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(thVisualComponents, thVisualComponents !== '')}
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid #000; padding: 4px;">- Độ ướt chân/ Wetting</td>
                             <td style="border: 1px solid #000; padding: 4px; text-align: center;">
-                                ${thVisual2 ? createHighlightedSelect(thVisual2) : ''}
+                                ${thVisualResult ? createHighlightedSelect(thVisualResult) : ''}
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid #000; padding: 4px;">- Không có cầu chì/ No solder bridges</td>
                             <td style="border: 1px solid #000; padding: 4px; text-align: center;">
-                                ${thVisual3 ? createHighlightedSelect(thVisual3) : ''}
+                                <div>ENG: ${createHighlightedText(thVisualEng, thVisualEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(thVisualQc, thVisualQc !== '')}</div>
                             </td>
                         </tr>
                     </table>
                 </div>
-            </div>
-            
+            </div>`;
+    }
+    
+    // Coating Process Section
+    if (processes.includes('COATING')) {
+        pdfContent += `
+            <!-- COATING Process -->
+            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
+                <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
+                    COATING PROCESS
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        COATING
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">THÔNG SỐ / PARAMETERS</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">GIÁ TRỊ / VALUE</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Dung dịch coating/ Coating solution:</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(coatingSolution, coatingSolution !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${coatingSolutionResult ? createHighlightedSelect(coatingSolutionResult) : ''}
+                            </td>
+                            <td rowspan="5" style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">
+                                <div>ENG: ${createHighlightedText(coatingEng, coatingEng !== '')}</div>
+                                <div style="margin-top: 10px;">QC: ${createHighlightedText(coatingQc, coatingQc !== '')}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Phương pháp coating/ Coating method:</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(coatingMethod, coatingMethod !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${coatingMethodResult ? createHighlightedSelect(coatingMethodResult) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Phương pháp sấy/ Drying method:</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(dryingMethod, dryingMethod !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${dryingMethodResult ? createHighlightedSelect(dryingMethodResult) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Nhiệt độ sấy/ Drying temperature:</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(dryingTemp, dryingTemp !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${dryingTempResult ? createHighlightedSelect(dryingTempResult) : ''}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">- Thời gian sấy/ Drying time:</td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(dryingTime, dryingTime !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${dryingTimeResult ? createHighlightedSelect(dryingTimeResult) : ''}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>`;
+    }
+    
+    // Boxbuild Process Section
+    if (processes.includes('BOXBUILD')) {
+        pdfContent += `
+            <!-- BOXBUILD Process -->
+            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
+                <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
+                    LẮP RÁP / BOXBUILD PROCESS
+                </div>
+                
+                <!-- Assembly Jig/Tool -->
+                <div style="margin-top: 10px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        LẮP RÁP BOXBUILD
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">JIG/DỤNG CỤ LẮP RÁP / ASSEMBLY JIG OR TOOL</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">TIÊU CHUẨN / SPECIFICATION</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(assemblyJig, assemblyJig !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(assemblySpec, assemblySpec !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${assemblyJigResult ? createHighlightedSelect(assemblyJigResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(assemblyJigEng, assemblyJigEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(assemblyJigQc, assemblyJigQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Assembly Component -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        SỐ LƯỢNG LINH KIỆN LẮP RÁP / ASSEMBLY COMPONENT QUANTITY
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">SỐ LƯỢNG LINH KIỆN / COMPONENT QUANTITY</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">HƯỚNG/CHIỀU LẮP LINH KIỆN / COMPONENT ORIENTATION</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 15%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(assemblyQty, assemblyQty !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">Theo bản vẽ/ According to the drawing</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${assemblyQtyResult ? createHighlightedSelect(assemblyQtyResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(assemblyQtyEng, assemblyQtyEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(assemblyQtyQc, assemblyQtyQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- IMEI/Label -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        IMEI / LABEL
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">VỊ TRÍ DÁN NHÃN / LABEL POSITION</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 20%;">HƯỚNG DÁN NHÃN / LABEL ORIENTATION</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 35%;">NỘI DUNG NHÃN / LABEL CONTENT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(labelPosition, labelPosition !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(labelOrientation, labelOrientation !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(labelContent, labelContent !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${labelResult ? createHighlightedSelect(labelResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(labelEng, labelEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(labelQc, labelQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Visual Inspection -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        KIỂM TRA NGOẠI QUAN / VISUAL INSPECTION
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">TIÊU CHUẨN KIỂM TRA / INSPECTION REQUIREMENT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">MÔ TẢ / DESCRIPTION</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(boxInspectionReq, boxInspectionReq !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(boxInspectionDesc, boxInspectionDesc !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${boxInspectionResult ? createHighlightedSelect(boxInspectionResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(boxInspectionEng, boxInspectionEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(boxInspectionQc, boxInspectionQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>`;
+    }
+    
+    // Packaging Process Section
+    if (processes.includes('PACKING')) {
+        pdfContent += `
+            <!-- PACKAGING Process -->
+            <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
+                <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
+                    ĐÓNG GÓI / PACKAGING PROCESS
+                </div>
+                
+                <!-- Packaging -->
+                <div style="margin-top: 10px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        ĐÓNG GÓI / PACKAGING
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">VẬT LIỆU ĐÓNG GÓI / PACKAGING MATERIAL</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">PHƯƠNG PHÁP ĐÓNG GÓI / PACKAGING METHOD</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 20%;">SỐ LƯỢNG/THÙNG / QUANTITY PER BOX</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                <div>- Theo BOM Đính kèm/ Attached BOM</div>
+                                <div>- Bổ sung (nếu có)/ Additional (if any): 
+                                    ${createHighlightedText(packagingMaterial, packagingMaterial !== '')}
+                                </div>
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(packagingMethod, packagingMethod !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(packagingQty, packagingQty !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${packagingResult ? createHighlightedSelect(packagingResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(packagingEng, packagingEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(packagingQc, packagingQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Label -->
+                <div style="margin-top: 15px;">
+                    <div style="background-color: #f0f0f0; padding: 5px; font-weight: bold; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; margin: 5px -8px;">
+                        LABEL
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">NỘI DUNG LABEL / LABEL CONTENT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 40%;">MẪU HOẶC HÌNH ẢNH LABEL THỰC TẾ / ACTUAL IMAGE/SAMPLE</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">KẾT QUẢ / RESULT</th>
+                            <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 10%;">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                ${createHighlightedText(packLabelContent, packLabelContent !== '')}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px;">
+                                <div>- Thêm hình ảnh hoặc mẫu thực tế vào ô này</div>
+                                <div>- Add actual image in this box</div>
+                                ${packLabelImage ? createHighlightedTextarea(packLabelImage) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                ${packLabelResult ? createHighlightedSelect(packLabelResult) : ''}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <div>ENG: ${createHighlightedText(packLabelEng, packLabelEng !== '')}</div>
+                                <div style="margin-top: 2px;">QC: ${createHighlightedText(packLabelQc, packLabelQc !== '')}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>`;
+    }
+    
+    // Conclusion Section (Luôn hiển thị)
+    pdfContent += `
             <!-- Conclusion -->
             <div style="border: 1px solid #000; margin-bottom: 10px; padding: 8px; page-break-inside: avoid;">
                 <div style="background-color: #e0e0e0; padding: 6px; margin: -8px -8px 8px -8px; border-bottom: 1px solid #000; font-weight: bold; font-size: 11pt;">
-                    KẾT LUẬN/ CONCLUSION
+                    KẾT LUẬN / CONCLUSION
                 </div>
                 
                 <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt;">
                     <tr>
-                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 20%;">KẾT QUẢ CUỐI CÙNG/FINAL RESULT</th>
-                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">RỦI RO TRONG CÁC CÔNG ĐOẠN/RISKS IN EACH PROCESS STEP</th>
-                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">BÀI HỌC TỪNG CÔNG ĐOẠN/LESSONS LEARNED FROM EACH PROCESS STEP</th>
-                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">CẢI TIẾN CÔNG ĐOẠN/PROCESS IMPROVEMENT</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 20%;">KẾT QUẢ CUỐI CÙNG / FINAL RESULT</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">RỦI RO TRONG CÁC CÔNG ĐOẠN / RISKS IN EACH PROCESS STEP</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 25%;">BÀI HỌC TỪNG CÔNG ĐOẠN / LESSONS LEARNED FROM EACH PROCESS STEP</th>
+                        <th style="border: 1px solid #000; padding: 4px; background-color: #f0f0f0; text-align: center; width: 30%;">CẢI TIẾN CÔNG ĐOẠN / PROCESS IMPROVEMENT</th>
                     </tr>
                     <tr>
                         <td style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">
@@ -2859,8 +4328,9 @@ function generatePDFContentNew() {
                 <p>NPI Record - Phiên bản Multi-User Real-time</p>
                 <p>© 2024 - Đồng bộ thời gian thực với Firebase</p>
             </div>
-        </div>
-    `;
+        </div>`;
+    
+    return pdfContent;
 }
 
         // ========== ĐỊNH DẠNG NGÀY THÁNG ==========
@@ -2969,6 +4439,36 @@ function generatePDFContentNew() {
             updateStatus(isOnline ? "Đang kết nối" : "Mất kết nối", isOnline ? "online" : "offline");
         }
 
+        // ========== TAB NAVIGATION ==========
+        function setupTabNavigation() {
+            const tabs = document.querySelectorAll('.process-tab');
+            const contents = document.querySelectorAll('.process-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show active content
+                    contents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${tabId}-process` || 
+                            (tabId === 'smt' && content.id === 'smt-process') ||
+                            (tabId === 'through-hole' && content.id === 'through-hole-process') ||
+                            (tabId === 'coating' && content.id === 'coating-process') ||
+                            (tabId === 'boxbuild' && content.id === 'boxbuild-process') ||
+                            (tabId === 'packaging' && content.id === 'packaging-process') ||
+                            (tabId === 'conclusion' && content.id === 'conclusion-process')) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+        }
+
         // ========== RESET FORM ==========
         function resetForm() {
             if (confirm("Bạn có chắc muốn xóa TẤT CẢ dữ liệu hiện tại?\n\nDữ liệu đã lưu trên cloud vẫn giữ nguyên.")) {
@@ -3019,6 +4519,7 @@ function generatePDFContentNew() {
             setupSignaturePads();
             setupFormListeners();
             setupRealTimeInput();
+            setupTabNavigation();
             
             document.getElementById("projectAction").addEventListener("click", handleProjectAction);
             document.getElementById("saveToCloud").addEventListener("click", saveAllToCloud);
