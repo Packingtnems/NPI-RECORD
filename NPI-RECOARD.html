@@ -1278,6 +1278,10 @@ td > div > div {
                                 <label for="processCoating">COATING</label>
                             </div>
                             <div class="checkbox-item">
+                                <input type="checkbox" id="processDepanel" value="DEPANEL" class="form-checkbox">
+                                <label for="processDepanel">DEPANEL</label>
+                            </div>
+                            <div class="checkbox-item">
                                 <input type="checkbox" id="processBoxbuild" value="BOXBUILD" class="form-checkbox">
                                 <label for="processBoxbuild">BOXBUILD</label>
                             </div>
@@ -1300,6 +1304,7 @@ td > div > div {
                 <button class="process-tab active" data-tab="smt">SMT PROCESS</button>
                 <button class="process-tab" data-tab="through-hole">THROUGH-HOLE</button>
                 <button class="process-tab" data-tab="coating">COATING</button>
+                <button class="process-tab" data-tab="depanel">DEPANEL</button>
                 <button class="process-tab" data-tab="boxbuild">BOXBUILD</button>
                 <button class="process-tab" data-tab="packaging">PACKAGING</button>
                 <button class="process-tab" data-tab="conclusion">CONCLUSION</button>
@@ -1894,6 +1899,262 @@ td > div > div {
                             </td>
                         </tr>
                     </table>
+                </div>
+            </div>
+
+            <!-- DEPANEL Process Section -->
+            <div class="process-content" id="depanel-process">
+                <div class="form-section">
+                    <div class="section-title">DEPANEL PROCESS</div>
+                    
+                    <!-- Hand Depanel -->
+                    <div class="sub-section-title">TÁCH BẰNG TAY / HAND DEPANEL</div>
+                    <table>
+                        <tr>
+                            <th width="40%">THÔNG SỐ / PARAMETERS</th>
+                            <th width="30%">GIÁ TRỊ / VALUE</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>Dụng cụ tách / Depanel Tool</td>
+                            <td>
+                                <input type="text" id="handDepanelTool" placeholder="VD: Dao chuyên dụng, kìm" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="handDepanelResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td rowspan="3" style="text-align: left; vertical-align: middle;">
+                                <div>ENG: 
+                                    <input type="text" id="handDepanelEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 10px;">QC: 
+                                    <input type="text" id="handDepanelQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Phương pháp tách / Depanel Method</td>
+                            <td>
+                                <input type="text" id="handDepanelMethod" placeholder="VD: Tách theo đường cắt, vặn nhẹ" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="handDepanelMethodResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Lực tách tối đa / Maximum Depanel Force (N)</td>
+                            <td>
+                                <input type="text" id="handDepanelForce" placeholder="VD: 50N" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="handDepanelForceResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Router Depanel -->
+                    <div class="sub-section-title">ROUTER DEPANEL</div>
+                    <table>
+                        <tr>
+                            <th width="30%">THÔNG SỐ / PARAMETERS</th>
+                            <th width="30%">GIÁ TRỊ / VALUE</th>
+                            <th width="20%">CÓ DÙNG TOOL / USE TOOL</th>
+                            <th width="10%">KẾT QUẢ / RESULT</th>
+                            <th width="10%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>Tên chương trình / Program Name</td>
+                            <td>
+                                <input type="text" id="routerProgramName" placeholder="Nhập tên chương trình" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerUseTool" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="YES">YES</option>
+                                    <option value="NO">NO</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerProgramResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td rowspan="5" style="text-align: left; vertical-align: middle;">
+                                <div>ENG: 
+                                    <input type="text" id="routerEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 10px;">QC: 
+                                    <input type="text" id="routerQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Loại router bit / Router Bit Type</td>
+                            <td>
+                                <input type="text" id="routerBitType" placeholder="VD: Carbide, ø1.0mm" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerBitTool" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="YES">YES</option>
+                                    <option value="NO">NO</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerBitResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tốc độ quay / Spindle Speed (RPM)</td>
+                            <td>
+                                <input type="text" id="routerSpeed" placeholder="VD: 30,000 RPM" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerSpeedTool" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="YES">YES</option>
+                                    <option value="NO">NO</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerSpeedResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tốc độ di chuyển / Feed Rate (mm/min)</td>
+                            <td>
+                                <input type="text" id="routerFeedRate" placeholder="VD: 500 mm/min" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerFeedTool" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="YES">YES</option>
+                                    <option value="NO">NO</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerFeedResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Chiều sâu cắt / Cut Depth (mm)</td>
+                            <td>
+                                <input type="text" id="routerCutDepth" placeholder="VD: 1.8 mm" style="width: 100%;" class="form-input">
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerDepthTool" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="YES">YES</option>
+                                    <option value="NO">NO</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <select id="routerDepthResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Visual Inspection after Depanel -->
+                    <div class="sub-section-title">KIỂM TRA NGOẠI QUAN SAU TÁCH / VISUAL INSPECTION AFTER DEPANEL</div>
+                    <table>
+                        <tr>
+                            <th width="40%">TIÊU CHÍ KIỂM TRA / INSPECTION CRITERIA</th>
+                            <th width="30%">YÊU CẦU / REQUIREMENT</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>Đường cắt sạch / Clean Cut Edge</td>
+                            <td>Không có bavia, không nứt vỡ / No burrs, no cracks</td>
+                            <td style="text-align: center;">
+                                <select id="cleanCutResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                            <td rowspan="4" style="text-align: left; vertical-align: middle;">
+                                <div>ENG: 
+                                    <input type="text" id="depanelInspectionEng" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                                <div style="margin-top: 10px;">QC: 
+                                    <input type="text" id="depanelInspectionQc" class="input-medium form-input" placeholder="Tên">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Kích thước PCBA / PCBA Dimension</td>
+                            <td>Đúng theo bản vẽ / According to drawing</td>
+                            <td style="text-align: center;">
+                                <select id="dimensionResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Không hư hỏng linh kiện / No Component Damage</td>
+                            <td>Linh kiện không bị nứt, vỡ, biến dạng / Components not cracked, broken, deformed</td>
+                            <td style="text-align: center;">
+                                <select id="componentDamageResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Độ thẳng / Straightness</td>
+                            <td>PCBA không bị cong vênh / PCBA not warped</td>
+                            <td style="text-align: center;">
+                                <select id="straightnessResult" style="width: 100%;" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Notes -->
+                    <div class="form-row" style="margin-top: 15px;">
+                        <div class="form-group full-width">
+                            <label for="depanelNotes">Ghi chú / Notes:</label>
+                            <textarea id="depanelNotes" placeholder="Ghi chú về quá trình tách PCBA" rows="3" style="width: 100%;" class="form-textarea long-content"></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2859,7 +3120,58 @@ td > div > div {
             if (engineerSig) data._engineerSignature = engineerSig;
             if (qcSig) data._qcSignature = qcSig;
             
+            // Lưu dữ liệu từ tab DEPANEL
+            const depanelData = collectDepanelData();
+            Object.assign(data, depanelData);
+            
             return data;
+        }
+
+        function collectDepanelData() {
+            const depanelData = {};
+            
+            // Collect hand depanel data
+            const handFields = [
+                'handDepanelTool', 'handDepanelResult', 'handDepanelEng', 'handDepanelQc',
+                'handDepanelMethod', 'handDepanelMethodResult', 'handDepanelEng2', 'handDepanelQc2',
+                'handDepanelForce', 'handDepanelForceResult'
+            ];
+            
+            // Collect router depanel data
+            const routerFields = [
+                'routerProgramName', 'routerUseTool', 'routerProgramResult', 'routerEng', 'routerQc',
+                'routerBitType', 'routerBitTool', 'routerBitResult',
+                'routerSpeed', 'routerSpeedTool', 'routerSpeedResult',
+                'routerFeedRate', 'routerFeedTool', 'routerFeedResult',
+                'routerCutDepth', 'routerDepthTool', 'routerDepthResult'
+            ];
+            
+            // Collect inspection data
+            const inspectionFields = [
+                'cleanCutResult', 'dimensionResult', 'componentDamageResult', 'straightnessResult',
+                'depanelInspectionEng', 'depanelInspectionQc'
+            ];
+            
+            // Collect notes
+            const notesFields = ['depanelNotes'];
+            
+            // Combine all fields
+            const allFields = [...handFields, ...routerFields, ...inspectionFields, ...notesFields];
+            
+            allFields.forEach(fieldId => {
+                const element = document.getElementById(fieldId);
+                if (element) {
+                    if (element.type === "select-one") {
+                        depanelData[fieldId] = element.value;
+                    } else if (element.type === "checkbox") {
+                        depanelData[fieldId] = element.checked;
+                    } else {
+                        depanelData[fieldId] = element.value;
+                    }
+                }
+            });
+            
+            return depanelData;
         }
 
         function updateFormFromServer(serverData) {
@@ -3975,6 +4287,7 @@ td > div > div {
                 if (allData.processSMT) processes.push('SMT');
                 if (allData.processThroughHole) processes.push('THROUGH HOLE');
                 if (allData.processCoating) processes.push('COATING');
+                if (allData.processDepanel) processes.push('DEPANEL');
                 if (allData.processBoxbuild) processes.push('BOXBUILD');
                 if (allData.processPacking) processes.push('PACKING');
                 
@@ -4683,6 +4996,133 @@ td > div > div {
                 </div>`;
             }
             
+            // ========== DEPANEL PROCESS ==========
+            if (processes.includes('DEPANEL')) {
+                content += `
+                <div class="form-section">
+                    <div class="section-title">DEPANEL PROCESS</div>
+                    
+                    <!-- Hand Depanel -->
+                    <div class="sub-section-title">TÁCH BẰNG TAY / HAND DEPANEL</div>
+                    <table>
+                        <tr>
+                            <th width="40%">THÔNG SỐ / PARAMETERS</th>
+                            <th width="30%">GIÁ TRỊ / VALUE</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>Dụng cụ tách / Depanel Tool</td>
+                            <td>${highlight(data.handDepanelTool)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.handDepanelResult)}</td>
+                            <td rowspan="3" style="text-align: center; vertical-align: middle;">
+                                <div style="font-size: 8.5pt;">ENG: ${highlight(data.handDepanelEng)}</div>
+                                <div style="margin-top: 5px; font-size: 8.5pt;">QC: ${highlight(data.handDepanelQc)}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Phương pháp tách / Depanel Method</td>
+                            <td>${highlight(data.handDepanelMethod)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.handDepanelMethodResult)}</td>
+                        </tr>
+                        <tr>
+                            <td>Lực tách tối đa / Maximum Depanel Force (N)</td>
+                            <td>${highlight(data.handDepanelForce)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.handDepanelForceResult)}</td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Router Depanel -->
+                    <div class="sub-section-title">ROUTER DEPANEL</div>
+                    <table>
+                        <tr>
+                            <th width="30%">THÔNG SỐ / PARAMETERS</th>
+                            <th width="30%">GIÁ TRỊ / VALUE</th>
+                            <th width="20%">CÓ DÙNG TOOL / USE TOOL</th>
+                            <th width="10%">KẾT QUẢ / RESULT</th>
+                            <th width="10%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>Tên chương trình / Program Name</td>
+                            <td>${highlight(data.routerProgramName)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerUseTool)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerProgramResult)}</td>
+                            <td rowspan="5" style="text-align: center; vertical-align: middle;">
+                                <div style="font-size: 8.5pt;">ENG: ${highlight(data.routerEng)}</div>
+                                <div style="margin-top: 5px; font-size: 8.5pt;">QC: ${highlight(data.routerQc)}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Loại router bit / Router Bit Type</td>
+                            <td>${highlight(data.routerBitType)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerBitTool)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerBitResult)}</td>
+                        </tr>
+                        <tr>
+                            <td>Tốc độ quay / Spindle Speed (RPM)</td>
+                            <td>${highlight(data.routerSpeed)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerSpeedTool)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerSpeedResult)}</td>
+                        </tr>
+                        <tr>
+                            <td>Tốc độ di chuyển / Feed Rate (mm/min)</td>
+                            <td>${highlight(data.routerFeedRate)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerFeedTool)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerFeedResult)}</td>
+                        </tr>
+                        <tr>
+                            <td>Chiều sâu cắt / Cut Depth (mm)</td>
+                            <td>${highlight(data.routerCutDepth)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerDepthTool)}</td>
+                            <td style="text-align: center;">${highlightSelect(data.routerDepthResult)}</td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Visual Inspection after Depanel -->
+                    <div class="sub-section-title">KIỂM TRA NGOẠI QUAN SAU TÁCH / VISUAL INSPECTION AFTER DEPANEL</div>
+                    <table>
+                        <tr>
+                            <th width="40%">TIÊU CHÍ KIỂM TRA / INSPECTION CRITERIA</th>
+                            <th width="30%">YÊU CẦU / REQUIREMENT</th>
+                            <th width="15%">KẾT QUẢ / RESULT</th>
+                            <th width="15%">XÁC NHẬN / VERIFY</th>
+                        </tr>
+                        <tr>
+                            <td>Đường cắt sạch / Clean Cut Edge</td>
+                            <td>Không có bavia, không nứt vỡ / No burrs, no cracks</td>
+                            <td style="text-align: center;">${highlightSelect(data.cleanCutResult)}</td>
+                            <td rowspan="4" style="text-align: center; vertical-align: middle;">
+                                <div style="font-size: 8.5pt;">ENG: ${highlight(data.depanelInspectionEng)}</div>
+                                <div style="margin-top: 5px; font-size: 8.5pt;">QC: ${highlight(data.depanelInspectionQc)}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Kích thước PCBA / PCBA Dimension</td>
+                            <td>Đúng theo bản vẽ / According to drawing</td>
+                            <td style="text-align: center;">${highlightSelect(data.dimensionResult)}</td>
+                        </tr>
+                        <tr>
+                            <td>Không hư hỏng linh kiện / No Component Damage</td>
+                            <td>Linh kiện không bị nứt, vỡ, biến dạng / Components not cracked, broken, deformed</td>
+                            <td style="text-align: center;">${highlightSelect(data.componentDamageResult)}</td>
+                        </tr>
+                        <tr>
+                            <td>Độ thẳng / Straightness</td>
+                            <td>PCBA không bị cong vênh / PCBA not warped</td>
+                            <td style="text-align: center;">${highlightSelect(data.straightnessResult)}</td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Notes -->
+                    <div style="margin-top: 10px;">
+                        <div><strong>Ghi chú / Notes:</strong></div>
+                        <div style="margin-top: 3px; min-height: 30px; max-height: 50px; font-size: 8pt; line-height: 1.0; padding: 3px; border: 1px solid #ddd; overflow: hidden; word-break: break-all;">
+                            ${data.depanelNotes ? `<div class="highlight" style="padding: 1px;">${splitTextForPDF(data.depanelNotes, 40, 5)}</div>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }
+            
             // ========== BOXBUILD PROCESS ==========
             if (processes.includes('BOXBUILD')) {
                 content += `
@@ -5306,61 +5746,32 @@ td > div > div {
             
             // Auto-set today's date
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today;
+            const dateInput = document.getElementById('date');
+            if (dateInput && !dateInput.value) {
+                dateInput.value = today;
+            }
             
-            // Check URL for project ID
+            // Auto-highlight existing data on load
+            document.querySelectorAll("input, textarea, select").forEach(field => {
+                updateHighlight(field);
+            });
+            
+            // Load project from URL if exists
             const urlParams = new URLSearchParams(window.location.search);
             const projectIdFromUrl = urlParams.get('project');
             if (projectIdFromUrl && database) {
-                showLoading("Đang tham gia project từ link...");
-                setTimeout(() => {
-                    joinProjectFromUrl(projectIdFromUrl);
-                }, 1000);
-            }
-            
-            // Setup defect rate calculation
-            document.getElementById('totalQty').addEventListener('input', calculateDefectRate);
-            document.getElementById('ngQty').addEventListener('input', calculateDefectRate);
-            document.getElementById('okQty').addEventListener('input', calculateDefectRate);
-        });
-
-        async function joinProjectFromUrl(projectId) {
-            try {
-                const snapshot = await database.ref(`projects/${projectId}`).once("value");
-                
-                if (!snapshot.exists()) {
-                    showToast("❌ Project từ link không tồn tại!", "error");
-                    hideLoading();
-                    return;
-                }
-                
-                currentProjectId = projectId;
-                if (!currentUser) initUser();
-                
-                await database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).set({
-                    ...currentUser,
-                    online: true,
-                    lastActive: Date.now()
-                });
-                
-                updateUrlWithProjectId();
+                currentProjectId = projectIdFromUrl;
                 document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
-                document.getElementById("projectIdDisplay").title = "Click để copy ID";
                 document.getElementById("onlineUsersContainer").style.display = "block";
+                
+                if (!currentUser) initUser();
                 
                 setupRealtimeListeners();
                 loadProjectData();
                 
-                showToast(`✅ Đã tham gia project từ link!`, "success");
                 updateStatus("Đang đồng bộ thời gian thực", "online");
-                
-            } catch (error) {
-                console.error("Lỗi tham gia project từ link:", error);
-                showToast("❌ Lỗi tham gia project từ link", "error");
-            } finally {
-                hideLoading();
             }
-        }
+        });
     </script>
 </body>
 </html>
