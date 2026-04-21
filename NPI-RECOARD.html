@@ -2951,54 +2951,86 @@ td > div > div {
         }
 
         async function createNewProject() {
-            showLoading("Đang tạo project mới...");
-            
-            try {
-                currentProjectId = "npi_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 3).toUpperCase();
-                
-                if (!currentUser) initUser();
-                
-                const initialData = collectFormData();
-                initialData._metadata = {
-                    created: new Date().toISOString(),
-                    createdBy: currentUser.id,
-                    version: 1
-                };
-                
-                await database.ref(`projects/${currentProjectId}`).set({
-                    data: initialData,
-                    users: {
-                        [currentUser.id]: {
-                            ...currentUser,
-                            online: true,
-                            lastActive: Date.now()
-                        }
-                    },
-                    metadata: {
-                        created: new Date().toISOString(),
-                        createdBy: currentUser.name,
-                        projectName: `NPI-${new Date().toLocaleDateString("vi-VN")}`
-                    }
-                });
-                
-                updateUrlWithProjectId();
-                document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
-                document.getElementById("projectIdDisplay").title = "Click để copy ID";
-                document.getElementById("onlineUsersContainer").style.display = "block";
-                
-                setupRealtimeListeners();
-                updateShareLink();
-                
-                showToast(`✅ Đã tạo project: ${currentProjectId}`, "success");
-                updateStatus("Đang đồng bộ thời gian thực", "online");
-                
-            } catch (error) {
-                console.error("Lỗi tạo project:", error);
-                showToast("❌ Lỗi tạo project: " + error.message, "error");
-            } finally {
-                hideLoading();
+    showLoading("Đang tạo project mới...");
+    
+    try {
+        currentProjectId = "npi_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 3).toUpperCase();
+        
+        if (!currentUser) initUser();
+        
+        // SỬA LỖI 1: Xóa trắng giao diện TRƯỚC khi lấy dữ liệu lưu vào project mới
+        clearFormUI(); 
+        
+        const initialData = collectFormData();
+        initialData._metadata = {
+            created: new Date().toISOString(),
+            createdBy: currentUser.id,
+            version: 1
+        };
+        
+        await database.ref(`projects/${currentProjectId}`).set({
+            data: initialData,
+            users: {
+                [currentUser.id]: {
+                    ...currentUser,
+                    online: true,
+                    lastActive: Date.now()
+                }
+            },
+            metadata: {
+                created: new Date().toISOString(),
+                createdBy: currentUser.name,
+                projectName: `NPI-${new Date().toLocaleDateString("vi-VN")}`
             }
+        });
+        
+        updateUrlWithProjectId();
+        document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
+        document.getElementById("projectIdDisplay").title = "Click để copy ID";
+        document.getElementById("onlineUsersContainer").style.display = "block";
+        
+        setupRealtimeListeners();
+        updateShareLink();
+        
+        showToast(`✅ Đã tạo project: ${currentProjectId}`, "success");
+        updateStatus("Đã kết nối", "online"); // Thay vì "Đang đồng bộ..."
+        
+    } catch (error) {
+        console.error("Lỗi tạo project:", error);
+        showToast("❌ Lỗi tạo project: " + error.message, "error");
+    } finally {
+        hideLoading();
+    }
+}
+
+// THÊM HÀM NÀY ĐỂ XÓA GIAO DIỆN MÀ KHÔNG CẦN HỎI XÁC NHẬN (dùng cho việc tạo mới)
+function clearFormUI() {
+    document.querySelectorAll("input, textarea, select").forEach(element => {
+        if (element.type === "checkbox") {
+            element.checked = false;
+        } else if (element.type === "radio") {
+            // Không can thiệp radio của UI
+        } else {
+            element.value = "";
         }
+        element.classList.remove("has-data");
+        const row = element.closest("tr");
+        if (row) row.classList.remove("highlight-row");
+    });
+    
+    // Clear signatures
+    if (engineerSignaturePad) engineerSignaturePad.clear();
+    if (qcSignaturePad) qcSignaturePad.clear();
+    localStorage.removeItem("engineer_signature");
+    localStorage.removeItem("qc_signature");
+    localStorage.removeItem('pack_label_image');
+    
+    // Clear display divs
+    const engDisplay = document.getElementById("engineerSignatureDisplay");
+    if(engDisplay) { engDisplay.innerHTML = ""; engDisplay.classList.remove("has-signature"); }
+    const qcDisplay = document.getElementById("qcSignatureDisplay");
+    if(qcDisplay) { qcDisplay.innerHTML = ""; qcDisplay.classList.remove("has-signature"); }
+}
 
         async function joinExistingProject() {
             const projectId = prompt("Nhập ID project muốn tham gia:");
@@ -3048,53 +3080,59 @@ td > div > div {
 
         // ========== REALTIME LISTENERS ==========
         function setupRealtimeListeners() {
-            if (!currentProjectId || !database) return;
-            
-            console.log("👂 Đang lắng nghe thay đổi từ server...");
-            
-            // 1. Lắng nghe thay đổi dữ liệu form
-            database.ref(`projects/${currentProjectId}/data`).on("value", (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    updateFormFromServer(data);
-                }
-            });
-            
-            // 2. Lắng nghe thay đổi danh sách user
-            database.ref(`projects/${currentProjectId}/users`).on("value", (snapshot) => {
-                if (snapshot.exists()) {
-                    users = snapshot.val();
-                    updateUsersDisplay();
-                }
-            });
-            
-            keepAlive();
-            
-            window.addEventListener("beforeunload", () => {
-                if (currentProjectId && currentUser) {
-                    database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
-                        online: false,
-                        lastActive: Date.now(),
-                        editingField: null
-                    });
-                }
-            });
+    if (!currentProjectId || !database) return;
+    
+    console.log("👂 Đang lắng nghe thay đổi từ server...");
+    
+    // 1. Lắng nghe thay đổi dữ liệu form
+    database.ref(`projects/${currentProjectId}/data`).on("value", (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            updateFormFromServer(data);
         }
-
-        function keepAlive() {
-            if (userTimeout) clearTimeout(userTimeout);
-            
-            userTimeout = setTimeout(() => {
-                if (currentProjectId && currentUser && database) {
-                    database.ref(`projects/${currentProjectId}/users/${currentUser.id}`).update({
-                        lastActive: Date.now(),
-                        online: true
-                    });
-                    keepAlive();
-                }
-            }, 10000);
+    });
+    
+    // 2. Lắng nghe thay đổi danh sách user
+    database.ref(`projects/${currentProjectId}/users`).on("value", (snapshot) => {
+        if (snapshot.exists()) {
+            users = snapshot.val();
+            updateUsersDisplay();
         }
+    });
+    
+    // SỬA LỖI 3: Quản lý trạng thái kết nối thật bằng Firebase .info/connected
+    const connectedRef = database.ref(".info/connected");
+    connectedRef.on("value", (snap) => {
+        if (snap.val() === true) {
+            updateStatus("Đã kết nối", "online");
+            
+            // Thiết lập: Nếu mất mạng/đóng tab, tự động set offline trên server
+            if (currentUser && currentProjectId) {
+                const myUserRef = database.ref(`projects/${currentProjectId}/users/${currentUser.id}`);
+                myUserRef.onDisconnect().update({
+                    online: false,
+                    editingField: null,
+                    lastActive: Date.now()
+                });
+                
+                // Set trạng thái online khi vừa kết nối
+                myUserRef.update({
+                    online: true,
+                    lastActive: Date.now()
+                });
+            }
+        } else {
+            updateStatus("Đang kết nối lại...", "syncing");
+        }
+    });
+    
+    // XÓA BỎ keepAlive(); vì onDisconnect đã lo việc này tốt hơn rất nhiều.
+}
 
+// XÓA LUÔN HÀM NÀY, không cần dùng nữa
+// function keepAlive() { ... }
+
+        
         // ========== XỬ LÝ DỮ LIỆU FORM ==========
         function collectFormData() {
             const data = {};
@@ -3320,57 +3358,51 @@ td > div > div {
 
         // ========== XỬ LÝ INPUT THỜI GIAN THỰC ==========
         function setupRealTimeInput() {
-            let debounceTimer;
+    let debounceTimer;
+    
+    document.querySelectorAll("input, textarea, select").forEach(field => {
+        field.addEventListener("focus", function() {
+            if (currentProjectId && currentUser) {
+                currentUser.editingField = this.id;
+                updateUserEditingStatus(this.id);
+            }
+        });
+        
+        field.addEventListener("input", function() {
+            clearTimeout(debounceTimer);
+            updateHighlight(this);
             
-            document.querySelectorAll("input, textarea, select").forEach(field => {
-                field.addEventListener("focus", function() {
-                    if (currentProjectId && currentUser) {
-                        currentUser.editingField = this.id;
-                        updateUserEditingStatus(this.id);
-                    }
-                });
-                
-                field.addEventListener("input", function() {
-                    clearTimeout(debounceTimer);
-                    
-                    if (currentProjectId && currentUser) {
-                        saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
-                        
-                        debounceTimer = setTimeout(() => {
-                            saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
-                        }, 200);
-                    }
-                    
-                    updateHighlight(this);
-                    
-                    if (this.id === "totalQty" || this.id === "ngQty" || this.id === "okQty") {
-                        calculateDefectRate();
-                    }
-                });
-                
-                field.addEventListener("change", function() {
-                    if (currentProjectId && currentUser) {
-                        saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
-                    }
-                    updateHighlight(this);
-                });
-                
-                field.addEventListener("blur", function() {
-                    if (currentProjectId && currentUser) {
-                        currentUser.editingField = null;
-                        updateUserEditingStatus(null);
-                    }
-                });
-                
-                if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') {
-                    field.addEventListener('keyup', function() {
-                        if (currentProjectId && currentUser) {
-                            updateUserEditingStatus(this.id);
-                        }
-                    });
+            if (this.id === "totalQty" || this.id === "ngQty" || this.id === "okQty") {
+                calculateDefectRate();
+            }
+            
+            // SỬA LỖI 2: Xóa dòng save ngay lập tức, CHỈ dùng setTimeout (Debounce 500ms)
+            // Giúp tránh việc spam server khi gõ phím nhanh
+            const currentVal = this.type === "checkbox" ? this.checked : this.value;
+            const currentId = this.id;
+            
+            debounceTimer = setTimeout(() => {
+                if (currentProjectId && currentUser) {
+                    saveFieldToServer(currentId, currentVal);
                 }
-            });
-        }
+            }, 500); // Tăng lên 500ms để ổn định hơn
+        });
+        
+        field.addEventListener("change", function() {
+            if (currentProjectId && currentUser) {
+                saveFieldToServer(this.id, this.type === "checkbox" ? this.checked : this.value);
+            }
+            updateHighlight(this);
+        });
+        
+        field.addEventListener("blur", function() {
+            if (currentProjectId && currentUser) {
+                currentUser.editingField = null;
+                updateUserEditingStatus(null);
+            }
+        });
+    });
+}
 
         async function saveFieldToServer(fieldId, value) {
             if (!currentProjectId || !database || isSaving) return;
