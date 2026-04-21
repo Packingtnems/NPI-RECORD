@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -1053,17 +1052,7 @@
                 const userEl = document.createElement("div");
                 userEl.className = `user-badge ${user.editingField ? "editing" : ""}`;
                 userEl.style.borderLeft = `3px solid ${user.color}`;
-                userEl.innerHTML = `
-<div class="status-dot" style="background:${user.color || "#999"}"></div>
-
-<div class="user-avatar" style="background:${user.color || "#999"}">
-${(user.name || "?").charAt(0).toUpperCase()}
-</div>
-
-<span>${user.name || "Unknown"}</span>
-
-${user.id === currentUser?.id ? '<span style="font-size:9px;">(bạn)</span>' : ""}
-`;
+                userEl.innerHTML = `<div class="status-dot" style="background: ${user.color}"></div><div class="user-avatar" style="background: ${user.color}">${user.name.charAt(0).toUpperCase()}</div><span>${user.name}</span>${user.id === currentUser?.id ? '<span style="font-size:9px;">(bạn)</span>' : ""}`;
                 usersListEl.appendChild(userEl);
             });
             updateEditingHighlights();
