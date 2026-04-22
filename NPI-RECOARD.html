@@ -2785,7 +2785,6 @@ td > div > div {
 
     <script>
         // ========== CẤU HÌNH FIREBASE ==========
-          let database;
         const firebaseConfig = {
             apiKey: "AIzaSyDtXBh4JBdUeLvzNKWp6VUNatdML871k8E",
             authDomain: "npi-record.firebaseapp.com",
@@ -5802,22 +5801,16 @@ if (projectIdFromUrl) {
     document.getElementById("onlineUsersContainer").style.display = "block";
     
     // Đảm bảo Firebase đã sẵn sàng mới gọi hàm
-    // Thay đoạn checkReady cũ bằng đoạn này
-const checkReady = setInterval(() => {
-    // Kiểm tra xem database đã có giá trị chưa
-    if (typeof database !== 'undefined') {
-        clearInterval(checkReady); // Dừng vòng lặp khi đã sẵn sàng
-        
-        console.log("Firebase đã sẵn sàng, bắt đầu tải dữ liệu...");
-        
-        if (!currentUser) initUser();
-        setupRealtimeListeners();
-        loadProjectData();
-        updateStatus("Đã kết nối Firebase", "online");
-    } else {
-        console.log("Đang chờ Firebase khởi tạo...");
-    }
-}, 100);
+    const checkReady = setInterval(() => {
+        if (typeof database !== 'undefined') {
+            clearInterval(checkReady);
+            if (!currentUser) initUser();
+            setupRealtimeListeners();
+            loadProjectData();
+            updateStatus("Đang đồng bộ thời gian thực", "online");
+        }
+    }, 100);
+}
         });
     </script>
 </body>
