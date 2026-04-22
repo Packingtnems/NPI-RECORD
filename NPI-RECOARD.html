@@ -2968,7 +2968,7 @@ td > div > div {
             version: 1
         };
         
-        await database.ref(`projects/${currentProjectId}`).set({
+        await database.ref(`projects/${currentProjectId}/data`).set({
             data: initialData,
             users: {
                 [currentUser.id]: {
