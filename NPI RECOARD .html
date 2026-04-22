@@ -3082,27 +3082,38 @@ function clearFormUI() {
         function setupRealtimeListeners() {
     if (!currentProjectId || !database) return;
 
-    // Trỏ chính xác vào thư mục /data/ giống y hệt lúc lưu
+    // Sửa đường dẫn: Thêm /data vào cuối để khớp với lúc lưu
     const dataRef = database.ref(`projects/${currentProjectId}/data`);
     
-    // Lắng nghe dữ liệu tải xuống
     dataRef.on('value', (snapshot) => {
-        if (snapshot.exists()) {
-            const serverData = snapshot.val();
-            console.log("📥 Đã kéo dữ liệu từ Firebase về:", serverData); // Log để bạn dễ kiểm tra
-            updateFormFromServer(serverData);
-        } else {
-            console.log("Phòng này chưa có dữ liệu chi tiết.");
+        const data = snapshot.val();
+        if (data) {
+            console.log("📥 Đã nhận dữ liệu mới:", data);
+            updateFormFromServer(data);
         }
-    }, (error) => {
-        console.error("❌ Lỗi khi đọc dữ liệu Firebase:", error);
+    });
+
+    // Giữ nguyên phần presence
+    const presenceRef = database.ref(`projects/${currentProjectId}/presence`);
+    presenceRef.on('value', (snapshot) => {
+        updateOnlineUsers(snapshot.val());
     });
 }
 
 function loadProjectData() {
-    // Để trống hàm này!
-    // Vì hàm dataRef.on('value') ở trên đã tự động lấy dữ liệu ngay khi tải trang rồi.
-    // Nếu để code ở đây sẽ bị fetch data 2 lần gây xung đột hoặc đè dữ liệu.
+    if (!currentProjectId || !database) return;
+
+    // Sửa đường dẫn: Thêm /data
+    database.ref(`projects/${currentProjectId}/data`).once('value')
+        .then((snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                updateFormFromServer(data);
+            }
+        })
+        .catch((error) => {
+            console.error("Lỗi khi tải dữ liệu:", error);
+        });
 }
 
 
@@ -5780,20 +5791,26 @@ function loadProjectData() {
             });
             
             // Load project from URL if exists
-            const urlParams = new URLSearchParams(window.location.search);
-            const projectIdFromUrl = urlParams.get('project');
-            if (projectIdFromUrl && database) {
-                currentProjectId = projectIdFromUrl;
-                document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
-                document.getElementById("onlineUsersContainer").style.display = "block";
-                
-                if (!currentUser) initUser();
-                
-                setupRealtimeListeners();
-                loadProjectData();
-                
-                updateStatus("Đang đồng bộ thời gian thực", "online");
-            }
+            // Thay thế đoạn từ dòng 747 đến 758
+const urlParams = new URLSearchParams(window.location.search);
+const projectIdFromUrl = urlParams.get('project');
+
+if (projectIdFromUrl) {
+    currentProjectId = projectIdFromUrl;
+    document.getElementById("projectIdDisplay").textContent = `ID: ${currentProjectId}`;
+    document.getElementById("onlineUsersContainer").style.display = "block";
+    
+    // Đảm bảo Firebase đã sẵn sàng mới gọi hàm
+    const checkReady = setInterval(() => {
+        if (typeof database !== 'undefined') {
+            clearInterval(checkReady);
+            if (!currentUser) initUser();
+            setupRealtimeListeners();
+            loadProjectData();
+            updateStatus("Đang đồng bộ thời gian thực", "online");
+        }
+    }, 100);
+}
         });
     </script>
 </body>
